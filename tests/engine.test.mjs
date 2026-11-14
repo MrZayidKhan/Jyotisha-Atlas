@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as A from 'astronomy-engine';
+import {calculate} from '../src/engine.ts';
+import {groundedAnswer} from '../src/knowledge.ts';
+const base={name:'Fixture',date:'2000-01-01',time:'12:00',place:'Greenwich',lat:51.48,lon:0,offset:0,unknown:false};
+test('UTC offsets represent the same instant and sky',()=>{const a=calculate(base),b=calculate({...base,time:'17:30',offset:5.5});assert.equal(a.utc,b.utc);assert.deepEqual(a.placements,b.placements)});
+test('Ascendant is on the eastern horizon, independently transformed',()=>{for(const lat of [-45,0,51.48]){const c=calculate({...base,lat});const lambda=(c.lagna+c.ayanamsa)*Math.PI/180,eps=23.439291*Math.PI/180;const ra=((Math.atan2(Math.sin(lambda)*Math.cos(eps),Math.cos(lambda))*180/Math.PI+360)%360)/15;const dec=Math.asin(Math.sin(lambda)*Math.sin(eps))*180/Math.PI;const h=A.Horizon(new Date(c.utc),new A.Observer(lat,0,0),ra,dec);assert.ok(Math.abs(h.altitude)<.05,`altitude ${h.altitude}`);assert.ok(h.azimuth<180,`eastern azimuth ${h.azimuth}`)}});
+test('March equinox Sun is near tropical Aries zero',()=>{const c=calculate({...base,date:'2020-03-20',time:'03:50'});const lon=c.placements[0].tropical;assert.ok(Math.min(lon,360-lon)<.03)});
+test('Unknown time withholds houses and carries a lunar daily interval',()=>{const c=calculate({...base,unknown:true,time:''});assert.equal(c.lagna,null);assert.ok(c.placements.every(p=>p.house===null));assert.ok(c.placements[1].range);assert.ok(c.uncertain)});
+test('Nine bounded grahas, opposing mean nodes, and valid nakshatra',()=>{const c=calculate(base);assert.equal(c.placements.length,9);assert.ok(c.placements.every(p=>p.longitude>=0&&p.longitude<360&&p.house>=1&&p.house<=12));assert.ok(Math.abs(Math.abs(c.placements[7].longitude-c.placements[8].longitude)-180)<1e-8);assert.ok(c.pada>=1&&c.pada<=4)});
+test('Validation and unsupported answers are explicit',()=>{assert.throws(()=>calculate({...base,lat:89}));assert.throws(()=>calculate({...base,date:'1890-01-01'}));assert.match(groundedAnswer('when will I die?',calculate(base)),/do not support/);assert.match(groundedAnswer('Where is Chandra?',calculate(base)),/19.47/)});
