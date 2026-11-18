@@ -12,7 +12,7 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-Open http://127.0.0.1:5173 . Test with 2000-01-01, 12:00, Bhopal (23.2599, 77.4126), UTC +5.5. Confirm the coordinates and UTC offset on the birth date. Expect an 8.5-second journey followed by a calculated chart and reading panels. Skip/Escape, replay, reduced motion and WebGL fallback are supported. Inputs stay in memory; refresh clears them. Eight Indian cities have local lookup; other places use manual coordinates and historical UTC offset, including any daylight saving.
+Open http://127.0.0.1:5173 . Choose **Preview 3D · sample sky** for a labeled Greenwich sample, or enter birth details (for example 2000-01-01, 12:00, Bhopal, UTC +5.5). Confirm coordinates and the historical UTC offset. After a camera arrival, the 3D observatory **stays open**. Select Chandra, another graha, Moon Rashi, Nakshatra or Lagna inside the scene to fly to that destination and read the corresponding chart explanation. Drag to orbit, scroll/pinch to zoom, pause rotation or return to the overview. **Chart & report** or Escape returns to the table and report. Inputs stay in memory; refresh clears them. Eight Indian cities have local lookup; other places use manual coordinates and UTC offset including daylight saving.
 
 ## Optional backend and AI
 
@@ -35,12 +35,14 @@ Static Sites hosting supports animation, calculations, local retrieval and repor
 ## Components and data flow
 
 - `src/main.tsx`: form, chart, reading panels, library, chat and journey orchestration.
-- `src/SpaceScene.tsx`: lazy-loaded Three.js image sprites, artistic camera movement and calculated longitude alignment; resources released after the journey.
+- `src/Observatory.tsx`: persistent in-scene navigation, focus management, chapter explanations, loading, retry and exit.
+- `src/SpaceScene.tsx`: actual textured Three.js sphere meshes, Saturn ring geometry, panoramic sky, raycast selection, orbit controls and camera transitions. Graphics resources are released on exit.
+- `src/observatoryModel.ts`: maps calculated chart factors to camera destinations and source-limited explanations.
 - `src/engine.ts`: deterministic positions, approximate sidereal conversion, ascendant, Bhavas and Nakshatra; independent of AI.
 - `src/knowledge.ts`: separate glossary, source references, factor-grouping rules and retrieval.
 - `backend/main.py`: FastAPI calculation, health and optional AI endpoints.
 - `scripts/bridge.mjs`: invokes the same TypeScript engine through Node from Python. `POST /api/chart` accepts birth details; `POST /api/chat` recalculates from birth inputs before retrieving answers.
-- `public/assets`: locally downloaded NASA images (about 680 KB). `public/ATTRIBUTION.md` records provenance and usage.
+- `public/assets`: existing NASA thumbnails. `public/textures`: Solar System Scope surface maps (CC BY 4.0), including a 4K desktop Moon and 2K mobile Moon. The Milky Way panorama uses 4K desktop / 2K mobile maps. Source credits and transformation notes are in `public/ATTRIBUTION.md`.
 - `public/base.css`, `src/style.css`, `src/refinements.css`: responsive visual treatment. Motion handles UI transitions. No paid animation libraries or generated images.
 
 ## Methods and limitations
@@ -49,7 +51,7 @@ Astronomy Engine 2.1.19 (MIT) calculates geocentric tropical ecliptic longitudes
 
 Supported years: 1900–2100, past births only; latitude ±66°. Boundary-sensitive factors need specialist ephemeris verification; the sidereal approximation has not been independently certified against Swiss Ephemeris. Unknown time explicitly uses local noon, shows daily longitude endpoints, and withholds Lagna, houses and personalized readings.
 
-Cinematic sizes, distances and movement are artistic. Planet imagery does not reconstruct birth-date appearance. NASA PIA12348 is a Galactic-center composite used as a background, not a birth-sky star map. Rahu and Ketu are mathematical points.
+Model sizes, radial spacing, lighting and rotation are artistic; longitude angles come from chart data. The panoramic night sky is not an observer-specific star map. Rashi/Nakshatra sectors are coordinate divisions, not IAU constellation boundaries. Rahu and Ketu use geometric markers because they are mathematical points. Surface textures can contain color enhancement and creator-filled unmapped terrain; attribution is explicit.
 
 The searchable library contains 66 entries: nine Grahas, twelve Rashis, twelve Bhavas, 27 Nakshatras and six introductory/history/tradition entries. Readings are editorial summaries, not verse quotations or a comprehensive traditional judgment. Yoga detection, dasha timelines and a detailed multi-school corpus are not implemented; the library explicitly explains these limits.
 
@@ -62,10 +64,11 @@ Choose **Save report / PDF** after creating a chart, then choose your browser's 
 ```powershell
 npm.cmd run build
 node --experimental-strip-types --test tests/engine.test.mjs
+node --experimental-strip-types --test tests/observatory.test.mjs
 python -m unittest discover -s tests -p '*_test.py' -v
 ```
 
-Vite builds `dist/` and copies `public/` assets. Build/type checks passed. Six engine checks cover UTC equivalence, independently transformed eastern-horizon Lagna, equinox Sun longitude, unknown time, coordinate/node invariants and unsupported questions. Two API tests cover chart generation, validation, health and unknown time. Browser checks covered desktop chart reveal, mobile overflow, unknown-time cinematic and captured console errors (none during the checked journey). Full cross-device performance, PDF pagination and live LLM responses need broader testing.
+Vite builds `dist/` and copies `public/` assets. Build/type checks passed. Six engine checks cover UTC equivalence, independently transformed eastern-horizon Lagna, equinox Sun longitude, unknown time, coordinate/node invariants and unsupported questions. Four observatory checks verify graha-to-destination mapping, Moon-sector destinations, unknown-time Lagna exclusion and world-space longitude geometry. Earlier API tests cover chart generation, validation, health and unknown time. The new Moon model and persistent explanation panel were visually verified in Chrome. Further browser interaction testing was stopped by physical Escape; all planet transitions, mobile framing and reduced-motion behavior are not yet fully visually verified. PDF pagination and live LLM responses also need broader testing.
 
 ## Stages delivered
 

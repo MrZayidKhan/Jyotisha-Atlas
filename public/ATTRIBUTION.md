@@ -1,5 +1,13 @@
 # Jyotisha Atlas asset credits
 
+## Interactive 3D observatory — surface maps
+
+Planetary and sky maps in `textures/` are by **Solar System Scope / INOVE**, used under **Creative Commons Attribution 4.0 International**: https://creativecommons.org/licenses/by/4.0/ . Original collection and download links: https://www.solarsystemscope.com/textures/ . Solar System Scope is not affiliated with this project.
+
+Local files: `2k_moon.jpg`, `2k_sun.jpg`, `2k_mercury.jpg`, `2k_venus_atmosphere.jpg`, `2k_mars.jpg`, `2k_jupiter.jpg`, `2k_saturn.jpg`, `2k_saturn_ring_alpha.png`, `2k_earth_daymap.jpg`. The `4k_moon.jpg` map was resized and JPEG-compressed from their `8k_moon.jpg`. The 4K and 2K Milky Way maps were resized and JPEG-compressed from their `8k_stars_milky_way.jpg`. Maps are rendered on lit sphere meshes, with a separate textured ring for Saturn. No generated images are used.
+
+The source collection is based on spacecraft/NASA imagery with adjusted colors; some unmapped areas are filled by its creators. The texture colors, artistic rotation and lighting are not a reconstruction of the planets' birth-date appearance. The sky panorama is an atmospheric background, not an observer-specific star chart. Rashi and Nakshatra arcs are equal sidereal coordinate sectors, not physical orbital paths or IAU constellation outlines.
+
 All imagery is bundled locally. The composition is an artistic educational visualization. Planet images are photographs/composites; the animation does not recreate the observer's actual field of view, planet sizes, distances, phase or visibility.
 
 | File | NASA media ID | Source |

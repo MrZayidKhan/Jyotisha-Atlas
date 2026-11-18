@@ -1,3 +1,4 @@
 .sky-stage{isolation:auto}.placement-panel img{isolation:auto}.result-actions{flex-shrink:0}.section-top>div:first-child{min-width:0}.birth-form .button{min-height:48px}.graha-point:focus{outline:none}.graha-point:focus circle{stroke:#fff;stroke-width:3px}
+.hero-actions button.text-link{background:transparent;border:0;padding:10px 0;text-align:left;cursor:pointer;color:#d2c4aa;font:12px var(--sans)}
 @media(max-width:780px){.nav .wordmark{font-size:13px}.nav-cta{max-width:125px;font-size:9px;text-align:right}.hero-actions{gap:15px}.hero-actions .button{line-height:1.5;flex:1}.hero-actions .text-link{flex:1;font-size:11px}.hero-foot{font-size:8px}.form-intro h2{font-size:42px}}
 @media print{.method-note a:after{content:' (' attr(href) ')';font-size:8px;overflow-wrap:anywhere}.summary-strip span{color:#555}.precision-note{font-size:9px}.print-footer{border-top:1px solid #999;padding-top:10px}}
