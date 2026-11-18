@@ -18,7 +18,11 @@ export function siderealOffset(date:Date){
 export function calculate(b:Birth):Chart {
  if(!b.date||(!b.unknown&&!b.time)||!b.place.trim()||!Number.isFinite(b.lat)||!Number.isFinite(b.lon)||!Number.isFinite(b.offset)||Math.abs(b.lat)>66||Math.abs(b.lon)>180||Math.abs(b.offset)>14)throw Error('Enter valid birth details. Supported latitude: 66° S to 66° N; UTC offset: −14 to +14.');
  const year=Number(b.date.slice(0,4));if(year<1900||year>2100)throw Error('Choose a date between 1900 and 2100.');
- const date=new Date(Date.parse(`${b.date}T${b.unknown?'12:00':b.time}:00Z`)-b.offset*3600000);
+ const civilTime=b.unknown?'12:00':b.time;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(b.date)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(civilTime))throw Error('Enter a valid birth date and time.');
+ const civilDate=new Date(`${b.date}T${civilTime}:00Z`);
+ if(!Number.isFinite(civilDate.getTime())||civilDate.toISOString().slice(0,10)!==b.date)throw Error('Enter a valid calendar date.');
+ const date=new Date(civilDate.getTime()-b.offset*3600000);
  if(!Number.isFinite(date.getTime())||date.getTime()>Date.now())throw Error('Enter a valid birth date in the past.');
  const t=(date.getTime()-Date.UTC(2000,0,1,12))/86400000/36525;
  const ayanamsa=siderealOffset(date);

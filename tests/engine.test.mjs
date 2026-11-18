@@ -10,3 +10,8 @@ test('March equinox Sun is near tropical Aries zero',()=>{const c=calculate({...
 test('Unknown time withholds houses and carries a lunar daily interval',()=>{const c=calculate({...base,unknown:true,time:''});assert.equal(c.lagna,null);assert.ok(c.placements.every(p=>p.house===null));assert.ok(c.placements[1].range);assert.ok(c.uncertain)});
 test('Nine bounded grahas, opposing mean nodes, and valid nakshatra',()=>{const c=calculate(base);assert.equal(c.placements.length,9);assert.ok(c.placements.every(p=>p.longitude>=0&&p.longitude<360&&p.house>=1&&p.house<=12));assert.ok(Math.abs(Math.abs(c.placements[7].longitude-c.placements[8].longitude)-180)<1e-8);assert.ok(c.pada>=1&&c.pada<=4)});
 test('Validation and unsupported answers are explicit',()=>{assert.throws(()=>calculate({...base,lat:89}));assert.throws(()=>calculate({...base,date:'1890-01-01'}));assert.match(groundedAnswer('when will I die?',calculate(base)),/do not support/);assert.match(groundedAnswer('Where is Chandra?',calculate(base)),/19.47/)});
+test('Impossible dates and 24-hour rollover are rejected instead of normalized',()=>{
+ assert.throws(()=>calculate({...base,date:'2001-02-29'}),/calendar date/);
+ assert.throws(()=>calculate({...base,time:'24:00'}),/date and time/);
+ assert.doesNotThrow(()=>calculate({...base,date:'2000-02-29'}));
+});

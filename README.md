@@ -1,14 +1,16 @@
 # Jyotisha Atlas
 
+[Complete user, glossary, and developer guide](public/GUIDE.md).
+
 ## Hosted chart and observatory
 
 The report compares Parashari house-lord readings with Jaimini's seven Chara Karakas, Navamsa and Rashi Drishti. The Parashari report shows six chart themes and eight structural yoga checks, with the placement evidence for every match. The Vimshottari selector shows Mahadasha and Antardasha periods from birth, uses the Moon's nakshatra balance and a 365.25-day year, and highlights the current periods. Reflection, giving and service suggestions are optional cultural practices, linked to report themes and the current period. The supported rules are a defined subset of both traditions. An unknown birth time withholds the interpretive report and timing.
 
-In the observatory, select **Birthplace horizon** to look around an observer-specific sky. Sun, Moon and visible-planet directions use topocentric positions at sea level, without refraction. Planet markers can be inspected below the horizon. The view includes 20 bright stars with J2000 directions transformed to the birth date. Terrain, twilight, proper motion and atmospheric appearance are outside this model. **Cinematic tour** retains the visual chart and its planet-by-planet explanations.
+In the observatory, select **Birthplace horizon** to look around an observer-specific sky. Sun, Moon and visible-planet directions use topocentric positions at sea level, without refraction. Planet markers can be inspected below the horizon. The view loads 1,295 HYG catalog stars with a 20-star fallback, transforming J2000 directions to the birth date. Sun altitude drives a simplified daylight and twilight palette. Terrain, proper motion and atmospheric refraction are outside this model. **Cinematic tour** retains the visual chart and its planet-by-planet explanations.
 
 ## Birth form and homepage
 
-The homepage has a simpler hero, a detailed NASA LRO lunar image, rounded controls and a compact library preview (six concepts initially; expand or filter for more).
+The homepage uses responsive NASA lunar imagery and a high-contrast palette. Create a chart with or without the 3D tour. Both sky views are reachable directly from the report. The cinematic scene loads a lightweight panoramic sky and Moon first, then adds NASA lunar relief and selected planet textures on demand.
 
 Birthplace is now a keyboard-accessible searchable dropdown. Selecting a city fills its WGS84 coordinates and IANA zone. Worldwide results come directly from Open-Meteo / GeoNames; 20 saved fallback cities cover popular Indian and international places if the network is unavailable. Only the public place-name query goes to geocoding, never the birth date/time. City coordinates represent a city center; use **Use precise coordinates instead** for a hospital, village or exact point.
 
@@ -27,7 +29,7 @@ node --import tsx --test tests/birth-form.test.tsx
 
 Six location/time-zone tests and four DOM interaction tests supplement the existing ten calculation/destination checks. The homepage was visually checked at desktop size; the live geocoding service was checked with Mysuru. Full mobile and node-camera visual regression testing remains incomplete.
 
-Development dependency audit (2026-11-18): npm reports a picomatch ReDoS advisory inherited through Vite's build/development tooling. The registry's latest picomatch (4.0.7) is still flagged, so no force downgrade or unverified override was applied. `npm audit --omit=dev` reports zero vulnerabilities in production dependencies. Recheck when an upstream patch is available; the published site is a static build and does not run Vite on the server.
+Development dependency audit (2026-11-18): npm reports a picomatch ReDoS advisory inherited through Vite's build/development tooling. The registry's latest picomatch (4.0.7) is still flagged, so no force downgrade or unverified override was applied. `npm audit --omit=dev` reports zero vulnerabilities in production dependencies. Recheck when an upstream patch is available; the hosted Worker serves production assets and does not run Vite.
 
 React/TypeScript educational observatory: enter birth details, watch a cinematic alignment, inspect calculated grahas, explore traditional concepts and print a report.
 
@@ -41,7 +43,7 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-Open http://127.0.0.1:5173 . Choose **Try the 3D experience** for a labeled Greenwich sample, or enter a birth date/time and select a city from the dropdown. Coordinates and the birth-date time-zone offset are filled automatically. After arrival, the 3D observatory **stays open**. Select Chandra, another graha, Moon Rashi, Nakshatra or Lagna inside the scene to travel to that factor and read its explanation. Drag to orbit, scroll/pinch to zoom, pause rotation or return to the overview. **Chart & report** or Escape returns to the report. Inputs stay in memory; refresh clears them.
+Open http://127.0.0.1:5173 . Choose **Explore a sample sky** for a labeled Greenwich sample, or enter a birth date/time and select a city from the dropdown. Coordinates and the birth-date time-zone offset are filled automatically. After arrival, the 3D observatory **stays open**. Select Chandra, another graha, Moon Rashi, Nakshatra or Lagna inside the scene to travel to that factor and read its explanation. Drag to orbit, scroll/pinch to zoom, pause rotation or return to the overview. **Chart & report** or Escape returns to the report. Inputs stay in memory; refresh clears them.
 
 ## Optional backend and AI
 

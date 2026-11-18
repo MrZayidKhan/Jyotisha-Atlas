@@ -13,7 +13,7 @@ export default function ChartReading({chart}:{chart:Chart}){
  const yogas=yogaCandidates(chart);
  const practice=periodPractice(chart);
  const aspects=jaiminiAspects(chart);
- return <div className="readings advanced-reading">
+ return <div id="reading" className="readings advanced-reading">
   <p className="eyebrow">Traditional interpretation</p>
   <h2>Your chart, read as a whole.</h2>
   <p className="section-copy">Compare two Jyotisha approaches. Each interpretation shows the chart evidence behind it.</p>
@@ -39,7 +39,7 @@ export default function ChartReading({chart}:{chart:Chart}){
    {aspects&&<p><strong>Rashi Drishti from Lagna.</strong> Your rising sign {aspects.rising} connects with {aspects.signs.join(', ')} under Jaimini sign aspects. {aspects.planets.length?`Classical grahas in those signs: ${aspects.planets.join(', ')}.`:'Those signs have no classical grahas in this chart.'}</p>}
    <a className="source" href={jaimini} target="_blank" rel="noreferrer">Jaimini Sutras ↗</a>
   </div>}
-  <div className="reading-feature">
+  <div id="dasha-timeline" className="reading-feature">
    <h3>Vimshottari timeline</h3>
    <p>{major&&minor?`Current period: ${titleCase(major.lord)} Mahadasha · ${titleCase(minor.lord)} Antardasha.`:'Choose a major period to see its subperiods.'}</p>
    <label>Mahadasha <select value={active} onChange={e=>setActive(Number(e.target.value))}>{periods.map((p,i)=><option value={i} key={p.start}>{titleCase(p.lord)} · {dateLabel(p.start)} to {dateLabel(p.end)}{p.start===major?.start?' · current':''}</option>)}</select></label>

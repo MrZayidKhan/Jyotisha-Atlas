@@ -2,13 +2,13 @@ import {type Chart,signs} from './engine.ts';
 import {houses,meanings} from './knowledge.ts';
 export type Destination='overview'|'moon'|'sun'|'mercury'|'venus'|'mars'|'jupiter'|'saturn'|'rahu'|'ketu'|'nakshatra'|'lagna'|'rashi';
 export const bodies:Record<string,{radius:number;orbit:number;texture:string;english:string;subtitle:string;science:string}>={
- moon:{radius:1.65,orbit:16,texture:'2k_moon.jpg',english:'Moon',subtitle:'Your Chandra',science:'Earth’s natural satellite. The bright and dark terrain on this model follows an equirectangular lunar surface map.'},
- sun:{radius:3,orbit:24,texture:'2k_sun.jpg',english:'Sun',subtitle:'Your Surya',science:'Our star. The texture shows solar surface structure; the luminous material represents its own emitted light.'},
- mercury:{radius:1.05,orbit:20,texture:'2k_mercury.jpg',english:'Mercury',subtitle:'Your Budha',science:'A rocky planet with an extensively cratered surface. This map draws on spacecraft imagery.'},
- venus:{radius:1.75,orbit:30,texture:'2k_venus_atmosphere.jpg',english:'Venus',subtitle:'Your Shukra',science:'Venus is wrapped in a dense atmosphere. The model shows cloud cover, rather than pretending its rocky surface is visible.'},
- mars:{radius:1.3,orbit:27,texture:'2k_mars.jpg',english:'Mars',subtitle:'Your Mangala',science:'A rocky planet whose iron-rich surface gives it a characteristic red appearance. Surface mapping makes the model readable from different angles.'},
- jupiter:{radius:3.3,orbit:35,texture:'2k_jupiter.jpg',english:'Jupiter',subtitle:'Your Guru',science:'A gas giant with atmospheric bands and large storms. Its visible map shows clouds, not a solid ground surface.'},
- saturn:{radius:2.6,orbit:40,texture:'2k_saturn.jpg',english:'Saturn',subtitle:'Your Shani',science:'A gas giant surrounded by rings. The ring is a separate textured mesh; tilt and scale are chosen for a clear educational view.'}
+ moon:{radius:1.65,orbit:16,texture:'moon-2k.webp',english:'Moon',subtitle:'Your Chandra',science:'Earth’s natural satellite. NASA’s LRO color and elevation maps give this model its craters, maria and relief.'},
+ sun:{radius:3,orbit:24,texture:'sun.webp',english:'Sun',subtitle:'Your Surya',science:'Our star. The glowing corona and arcing prominences illustrate hot material shaped by solar magnetic fields.'},
+ mercury:{radius:1.05,orbit:20,texture:'mercury.webp',english:'Mercury',subtitle:'Your Budha',science:'A rocky planet with an extensively cratered surface. This map draws on spacecraft imagery.'},
+ venus:{radius:1.75,orbit:30,texture:'venus_atmosphere.webp',english:'Venus',subtitle:'Your Shukra',science:'Venus is wrapped in a dense atmosphere. The model shows cloud cover, rather than pretending its rocky surface is visible.'},
+ mars:{radius:1.3,orbit:27,texture:'mars.webp',english:'Mars',subtitle:'Your Mangala',science:'A rocky planet whose iron-rich surface gives it a characteristic red appearance. Surface mapping makes the model readable from different angles.'},
+ jupiter:{radius:3.3,orbit:35,texture:'jupiter.webp',english:'Jupiter',subtitle:'Your Guru',science:'A gas giant with atmospheric bands and large storms. Its visible map shows clouds, not a solid ground surface.'},
+ saturn:{radius:2.6,orbit:40,texture:'saturn.webp',english:'Saturn',subtitle:'Your Shani',science:'A gas giant surrounded by rings. The ring is a separate textured mesh; tilt and scale are chosen for a clear educational view.'}
 };
 export const chapters:Destination[]=['moon','nakshatra','rashi','lagna','sun','mercury','venus','mars','jupiter','saturn','rahu','ketu'];
 export function availableChapters(chart:Chart){return chapters.filter(key=>key!=='lagna'||chart.lagna!==null)}

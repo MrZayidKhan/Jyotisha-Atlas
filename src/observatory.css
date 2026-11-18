@@ -14,3 +14,9 @@
 .horizon-controls{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.9rem}
 .horizon-controls button{border-radius:99px;border:1px solid #ffffff40;background:#161e34;color:#fff;padding:.5rem .75rem;cursor:pointer}
 .horizon-controls [aria-pressed="true"]{background:#ddbd83;color:#131828}
+.sky-mode-toggle{top:79px;font:600 12px var(--sans);min-height:37px}
+.observatory-card{border-color:#b8c9ef30;background:linear-gradient(140deg,#141c32f5,#090e1cf5)}
+.obs-description,.obs-relation p{color:#bbc7dc}
+.world-label[hidden]{display:none}
+@media(max-width:760px){.sky-mode-toggle{top:66px}.birth-horizon{inset:115px 0 0}}
+@media(max-height:640px) and (min-width:761px){.sky-mode-toggle{top:62px;right:auto;left:50%;transform:translateX(-50%)}}

@@ -9,7 +9,10 @@ export interface SkyPoint {
  magnitude:number;
  distance?:number;
  illumination?:number;
+ colorIndex?:number|null;
  }
+
+export type CatalogStar=[ra:number,dec:number,magnitude:number,colorIndex:number|null];
 
 const bodies=[
  ['sun','Sun',A.Body.Sun],['moon','Moon',A.Body.Moon],['mercury','Mercury',A.Body.Mercury],
@@ -31,10 +34,17 @@ const stars=[
  ['Regulus',10.1395,11.9672,1.35],['Polaris',2.5303,89.2641,1.98],
 ] as const;
 
-export function birthHorizon(chart:Chart){
+export function birthHorizon(chart:Chart,catalog?:CatalogStar[]){
  const date=new Date(chart.utc);
  const observer=new A.Observer(chart.birth.lat,chart.birth.lon,0);
  const rotation=A.Rotation_EQJ_EQD(date);
+ const time=new A.AstroTime(date);
+ function star(name:string,ra:number,dec:number,magnitude:number,colorIndex?:number|null):SkyPoint{
+  const vector=A.VectorFromSphere(new A.Spherical(dec,ra*15,1),time);
+  const eq=A.EquatorFromVector(A.RotateVector(rotation,vector));
+  const {altitude,azimuth}=A.Horizon(date,observer,eq.ra,eq.dec);
+  return {key:name,name,altitude,azimuth,magnitude,colorIndex};
+ }
  return {
   planets:bodies.map(([key,name,body]):SkyPoint=>{
    const eq=A.Equator(body,date,observer,true,true);
@@ -42,11 +52,7 @@ export function birthHorizon(chart:Chart){
    const light=A.Illumination(body,date);
    return {key,name,altitude,azimuth,magnitude:light.mag,distance:eq.dist,illumination:light.phase_fraction};
   }),
-  stars:stars.map(([name,ra,dec,magnitude]):SkyPoint=>{
-   const vector=A.VectorFromSphere(new A.Spherical(dec,ra*15,1),new A.AstroTime(date));
-   const eq=A.EquatorFromVector(A.RotateVector(rotation,vector));
-   const {altitude,azimuth}=A.Horizon(date,observer,eq.ra,eq.dec);
-   return {key:name,name,altitude,azimuth,magnitude};
-  }),
+  stars:catalog?catalog.map(([ra,dec,magnitude,colorIndex],i)=>star(String(i),ra,dec,magnitude,colorIndex)):
+   stars.map(([name,ra,dec,magnitude])=>star(name,ra,dec,magnitude)),
  };
 }

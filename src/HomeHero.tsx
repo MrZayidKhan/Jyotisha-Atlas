@@ -1,1 +1,22 @@
-export default function HomeHero({preview}:{preview:()=>void}){return <section className="home-hero wrap"><div className="home-hero-copy"><p className="home-kicker"><span/>A new perspective on your sky</p><h1>A little closer<br/>to <em>your universe.</em></h1><p className="home-lede">Explore the sky at your birth, wander through the planets, and discover the ideas behind Jyotisha.</p><div className="home-actions"><a className="button" href="#birth-details">Explore your birth sky <span>↗</span></a><button className="home-play" onClick={preview}><span aria-hidden="true">▷</span>Try the 3D experience</button></div><p className="home-footnote">A moment of curiosity. A whole sky to explore.</p></div><div className="home-moon-scene"><div className="home-moon-halo"/><img src="/assets/moon-nearside.jpg" alt="Detailed NASA Lunar Reconnaissance Orbiter view of the lunar near side" width="1024" height="1024" fetchPriority="high"/><div className="moon-caption"><span>01 / CHANDRA</span><p>Every journey starts<br/>with a closer look.</p></div><span className="hero-image-credit">LUNAR RECONNAISSANCE ORBITER / NASA</span></div></section>}
+export default function HomeHero({preview}:{preview:()=>void}){
+ return <section className="home-hero wrap">
+  <div className="home-hero-copy">
+   <p className="home-kicker">INTERACTIVE JYOTISHA ATLAS</p>
+   <h1>Explore the sky<br/><em>at your birth.</em></h1>
+   <p className="home-lede">Create your Jyotisha birth chart, fly through your planetary placements, and see how each traditional reading is calculated.</p>
+   <div className="home-actions">
+    <a className="button" href="#birth-details">Create my birth chart <span aria-hidden="true">↗</span></a>
+    <button className="home-play" onClick={preview}><span aria-hidden="true">▷</span>Explore a sample sky</button>
+   </div>
+  </div>
+  <figure className="home-moon-scene">
+   <div className="home-moon-halo"/>
+   <img src="/assets/moon-nearside-960.webp"
+    srcSet="/assets/moon-nearside-480.webp 480w, /assets/moon-nearside-960.webp 960w, /assets/moon-nearside-1600.webp 1600w"
+    sizes="(max-width: 760px) 330px, 470px"
+    alt="The lunar near side, photographed by NASA’s Lunar Reconnaissance Orbiter"
+    width="1600" height="1554" fetchPriority="high"/>
+   <figcaption className="hero-image-credit">LUNAR NEAR SIDE · NASA LRO</figcaption>
+  </figure>
+ </section>;
+}
