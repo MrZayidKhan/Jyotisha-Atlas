@@ -6,3 +6,11 @@
 @media(prefers-reduced-motion:reduce){.observatory *, .world-label{transition:none!important}}
 .obs-node-legend{display:flex;gap:18px;margin:0 0 22px}.obs-node-legend>span{display:flex;align-items:center;gap:6px;font:10px var(--sans);color:#9cabc0}.obs-node-legend i{display:block;width:15px;height:2px;background:#cbae78;border-radius:2px}.obs-node-legend>span:last-child i{background:#a4b1df}.observatory-close,.obs-main-button,.obs-chapter-arrows button{border-radius:40px}.observatory-left>button{border-radius:9px}.observatory-card{border-radius:18px}.observatory-dock{border-radius:17px}.world-label{border-radius:10px}
 @media(max-width:760px){.observatory-dock{border-radius:0}.observatory-card{border-radius:18px}.dock-coordinate{font-family:Georgia,serif}}
+.sky-mode-toggle{position:absolute;z-index:10;top:90px;right:clamp(12px,3vw,40px);border:1px solid #d9b87d70;border-radius:99px;background:#10172b;color:#f8e3c4;padding:.55rem .85rem;cursor:pointer}
+.birth-horizon{position:absolute;z-index:4;inset:135px 0 0;overflow:auto;padding:0 clamp(14px,4vw,56px) 24px;background:#090d1b;color:#f6efe2}
+.birth-horizon h2{margin:0;font-size:clamp(1.5rem,4vw,2.75rem)}
+.birth-horizon canvas{display:block;width:100%;height:clamp(240px,48dvh,620px);border:1px solid #ffffff30;border-radius:1rem;cursor:grab;touch-action:none}
+.birth-horizon canvas:active{cursor:grabbing}
+.horizon-controls{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.9rem}
+.horizon-controls button{border-radius:99px;border:1px solid #ffffff40;background:#161e34;color:#fff;padding:.5rem .75rem;cursor:pointer}
+.horizon-controls [aria-pressed="true"]{background:#ddbd83;color:#131828}

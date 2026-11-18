@@ -1,6 +1,12 @@
 # Jyotisha Atlas
 
-## Latest interface update
+## Hosted chart and observatory
+
+The report compares Parashari house-lord readings with Jaimini's seven Chara Karakas, Navamsa and Rashi Drishti. The Parashari report shows six chart themes and eight structural yoga checks, with the placement evidence for every match. The Vimshottari selector shows Mahadasha and Antardasha periods from birth, uses the Moon's nakshatra balance and a 365.25-day year, and highlights the current periods. Reflection, giving and service suggestions are optional cultural practices, linked to report themes and the current period. The supported rules are a defined subset of both traditions. An unknown birth time withholds the interpretive report and timing.
+
+In the observatory, select **Birthplace horizon** to look around an observer-specific sky. Sun, Moon and visible-planet directions use topocentric positions at sea level, without refraction. Planet markers can be inspected below the horizon. The view includes 20 bright stars with J2000 directions transformed to the birth date. Terrain, twilight, proper motion and atmospheric appearance are outside this model. **Cinematic tour** retains the visual chart and its planet-by-planet explanations.
+
+## Birth form and homepage
 
 The homepage has a simpler hero, a detailed NASA LRO lunar image, rounded controls and a compact library preview (six concepts initially; expand or filter for more).
 
@@ -53,7 +59,7 @@ For LLM retrieval, create `.env` beside package.json using `.env.example`. Obtai
 
 AI receives the question, recent messages and server-generated answer cards. It may select only an allowed card ID; the server supplies the text. It cannot generate positions, rules or source references. This supports constrained follow-ups, not unrestricted astrology answers. Unsupported questions receive an explicit source-limited response. Local retrieval remains available if the provider fails.
 
-Static Sites hosting supports animation, calculations, local retrieval and report printing. The Python backend/connected AI are local and are **not deployed by static hosting**. Add authentication/rate limits before exposing the local development API publicly. No database is needed because charts and conversations are not persisted.
+Sites hosting uses a Worker with `/api/health` and `/api/chat`. The private site serves the report and the local chart guide without a key. Set `OPENAI_API_KEY` and `OPENAI_MODEL` in Sites runtime secrets to enable the optional connected AI toggle. The Worker recalculates chart facts, strips name and place label, and sends selected fact cards and user questions to the provider only in connected mode. The model selects a card, and provider errors fall back to a chart guide response. No database is needed. The Python service remains available for local development.
 
 ## Components and data flow
 
@@ -70,13 +76,13 @@ Static Sites hosting supports animation, calculations, local retrieval and repor
 
 ## Methods and limitations
 
-Astronomy Engine 2.1.19 (MIT) calculates geocentric tropical ecliptic longitudes. A **linear approximate Lahiri** correction uses J2000 23.857092° and 1.3969713°/century. This is not full Swiss Ephemeris Lahiri; that package lacked a Python 3.14 binary on this host. Lagna uses local sidereal time and mean obliquity; Bhavas are whole-sign. Rahu uses a mean-node polynomial, Ketu its opposite. Nakshatras use 27 equal divisions and four padas each.
+Astronomy Engine 2.1.19 (MIT) calculates geocentric tropical ecliptic longitudes. A J2000 Lahiri anchor uses IAU 2006 precession and nutation of date. This remains an approximation to a dedicated Lahiri ephemeris. Lagna uses apparent local sidereal time and true obliquity; Bhavas are whole-sign. Rahu uses a mean-node polynomial, Ketu its opposite. Nakshatras use 27 equal divisions and four padas each.
 
 Supported years: 1900–2100, past births only; latitude ±66°. Boundary-sensitive factors need specialist ephemeris verification; the sidereal approximation has not been independently certified against Swiss Ephemeris. Unknown time explicitly uses local noon, shows daily longitude endpoints, and withholds Lagna, houses and personalized readings.
 
 Model sizes, radial spacing, lighting and rotation are artistic; longitude angles come from chart data. The panoramic night sky is not an observer-specific star map. Rashi/Nakshatra sectors are coordinate divisions, not IAU constellation boundaries. Rahu and Ketu use geometric markers because they are mathematical points. Surface textures can contain color enhancement and creator-filled unmapped terrain; attribution is explicit.
 
-The searchable library contains 66 entries: nine Grahas, twelve Rashis, twelve Bhavas, 27 Nakshatras and six introductory/history/tradition entries. Readings are editorial summaries, not verse quotations or a comprehensive traditional judgment. Yoga detection, dasha timelines and a detailed multi-school corpus are not implemented; the library explicitly explains these limits.
+The searchable library contains 66 entries: nine Grahas, twelve Rashis, twelve Bhavas, 27 Nakshatras and six introductory/history/tradition entries. Readings are editorial summaries, not verse quotations or a comprehensive traditional judgment. The report implements a defined subset of yoga and timing rules and two schools. It does not claim exhaustive chart judgment.
 
 ## Report
 
@@ -91,7 +97,7 @@ node --experimental-strip-types --test tests/observatory.test.mjs
 python -m unittest discover -s tests -p '*_test.py' -v
 ```
 
-Vite builds `dist/` and copies `public/` assets. Build/type checks passed. Six engine checks cover UTC equivalence, independently transformed eastern-horizon Lagna, equinox Sun longitude, unknown time, coordinate/node invariants and unsupported questions. Four observatory checks verify graha-to-destination mapping, Moon-sector destinations, unknown-time Lagna exclusion and world-space longitude geometry. Earlier API tests cover chart generation, validation, health and unknown time. The new Moon model and persistent explanation panel were visually verified in Chrome. Further browser interaction testing was stopped by physical Escape; all planet transitions, mobile framing and reduced-motion behavior are not yet fully visually verified. PDF pagination and live LLM responses also need broader testing.
+Vite builds `dist/client` and copies `public/` assets. The build also bundles the Sites Worker into `dist/server`. Run `node --experimental-strip-types --test tests/jyotisha.test.mjs tests/worker.test.mjs` after building. Build/type checks passed. Six engine checks cover UTC equivalence, independently transformed eastern-horizon Lagna, equinox Sun longitude, unknown time, coordinate/node invariants and unsupported questions. Four observatory checks verify graha-to-destination mapping, Moon-sector destinations, unknown-time Lagna exclusion and world-space longitude geometry. Earlier API tests cover chart generation, validation, health and unknown time. The new Moon model and persistent explanation panel were visually verified in Chrome. Further browser interaction testing was stopped by physical Escape; all planet transitions, mobile framing and reduced-motion behavior are not yet fully visually verified. PDF pagination and live LLM responses also need broader testing.
 
 ## Stages delivered
 

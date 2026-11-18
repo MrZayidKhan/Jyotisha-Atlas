@@ -1,3 +1,0 @@
-.real-moon{object-fit:cover;background:#000;box-shadow:none;border-radius:0;mix-blend-mode:screen;width:310px;height:310px}
-@media(max-width:780px){.real-moon{width:220px;height:220px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
