@@ -57,11 +57,11 @@ python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 
 Expect `Uvicorn running on http://127.0.0.1:8000`. Vite proxies `/api/*` to FastAPI. Inspect endpoints at http://127.0.0.1:8000/docs . The frontend chart and local source guide work without this service.
 
-For LLM retrieval, create `.env` beside package.json using `.env.example`. Obtain a key from https://platform.openai.com/api-keys . Set `OPENAI_API_KEY` and `OPENAI_MODEL` to a Responses API model available in your account with structured-output support. Never paste a key into chat or put it in a `VITE_` variable. Restart FastAPI, reload the frontend, and verify `/api/health` reports `llm_configured: true`; chat will offer an AI toggle. Live LLM requests were **not tested**, since credentials were not supplied.
+For Gemini retrieval, create `.env` beside package.json using `.env.example`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY`. The optional `GEMINI_MODEL` defaults to `gemini-2.5-flash-lite`. Keep the key server-side. Restart FastAPI and reload the frontend. Chat offers the AI toggle when `/api/health` reports `llm_configured: true`.
 
 AI receives the question, recent messages and server-generated answer cards. It may select only an allowed card ID; the server supplies the text. It cannot generate positions, rules or source references. This supports constrained follow-ups, not unrestricted astrology answers. Unsupported questions receive an explicit source-limited response. Local retrieval remains available if the provider fails.
 
-Sites hosting uses a Worker with `/api/health` and `/api/chat`. The private site serves the report and the local chart guide without a key. Set `OPENAI_API_KEY` and `OPENAI_MODEL` in Sites runtime secrets to enable the optional connected AI toggle. The Worker recalculates chart facts, strips name and place label, and sends selected fact cards and user questions to the provider only in connected mode. The model selects a card, and provider errors fall back to a chart guide response. No database is needed. The Python service remains available for local development.
+Sites hosting uses a Worker with `/api/health` and `/api/chat`. Set `GEMINI_API_KEY` in Sites runtime secrets to enable the optional connected AI toggle. Set `GEMINI_MODEL` only to override the default. In connected mode, the Worker sends derived chart cards and user questions to Gemini. Gemini selects a card. If the key is absent or Gemini fails, the Worker returns the built-in guide response.
 
 ## Components and data flow
 
