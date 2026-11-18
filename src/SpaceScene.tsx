@@ -5,7 +5,7 @@ import type {Chart} from './engine';
 import {bodies,destinationInfo,worldPosition,type Destination} from './observatoryModel';
 
 interface Props {chart:Chart;destination:Destination;intro:boolean;paused:boolean;reducedMotion:boolean;reset:number;onSelect:(key:Destination)=>void;onReady:()=>void;onProgress:(value:number)=>void;onUnavailable:()=>void}
-interface Actor {group:THREE.Group;mesh:THREE.Mesh;radius:number;label:HTMLButtonElement|null}
+interface Actor {group:THREE.Group;mesh:THREE.Mesh;radius:number;label:HTMLButtonElement|null;focusOffset?:THREE.Vector3}
 export default function SpaceScene(props:Props){
  const host=useRef<HTMLDivElement>(null),labels=useRef<HTMLDivElement>(null);
  const live=useRef(props);live.current=props;
@@ -76,8 +76,21 @@ export default function SpaceScene(props:Props){
   const selectedArcMaterial=material(new THREE.MeshBasicMaterial({color:0xd9b879,transparent:true,opacity:.24,side:THREE.DoubleSide,depthWrite:false}));
   let highlight:THREE.Mesh|null=null;
   const connection=new THREE.Line(geometry(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(1,0,0)])),material(new THREE.LineDashedMaterial({color:0xc7b485,transparent:true,opacity:.45,dashSize:.5,gapSize:.4})));scene.add(connection);
-  // Nodes deliberately use wire geometry; they are intersections, not worlds.
-  for(const p of props.chart.placements.filter(p=>['rahu','ketu'].includes(p.key))){const group=new THREE.Group();group.position.set(...worldPosition(p.longitude,33));const marker=new THREE.Mesh(geometry(new THREE.TorusGeometry(1.3,.035,8,80)),material(new THREE.MeshBasicMaterial({color:p.key==='rahu'?0x9cb4e3:0xe4bb86})));marker.rotation.x=Math.PI/2;marker.userData.destination=p.key;group.add(marker);const axis=new THREE.Mesh(geometry(new THREE.OctahedronGeometry(.5,0)),material(new THREE.MeshBasicMaterial({color:0xaab9d4,wireframe:true})));group.add(axis);scene.add(group);pickables.push(marker,axis);axis.userData.destination=p.key;actors.set(p.key,{group,mesh:axis,radius:1.3,label:makeLabel(p.key,p.name,'LUNAR NODE')})}
+  // Orbital-intersection diagrams. Inclination is exaggerated for readability.
+  for(const p of props.chart.placements.filter(p=>['rahu','ketu'].includes(p.key))){
+   const group=new THREE.Group();group.position.set(...worldPosition(p.longitude,33));
+   const ascending=p.key==='rahu',tilt=ascending?-.43:.43,orbitRadius=3.1;
+   const gold=0xcbae78,blue=ascending?0x9baddc:0xc9a7d9;
+   const ecliptic=new THREE.Group(),lunar=new THREE.Group();ecliptic.position.x=-orbitRadius;lunar.position.x=-orbitRadius;lunar.rotation.x=tilt;group.add(ecliptic,lunar);
+   function orbitalPath(color:number,parent:THREE.Group){const points:THREE.Vector3[]=[];for(let i=0;i<=180;i++){const a=i/180*Math.PI*2;points.push(new THREE.Vector3(Math.cos(a)*orbitRadius,0,Math.sin(a)*orbitRadius))}const path=new THREE.CatmullRomCurve3(points);const tube=new THREE.Mesh(geometry(new THREE.TubeGeometry(path,180,.022,6,false)),material(new THREE.MeshBasicMaterial({color,transparent:true,opacity:.82})));parent.add(tube);tube.userData.destination=p.key;pickables.push(tube)}
+   orbitalPath(gold,ecliptic);orbitalPath(blue,lunar);
+   const disk=new THREE.Mesh(geometry(new THREE.CircleGeometry(orbitRadius,96)),material(new THREE.MeshBasicMaterial({color:gold,transparent:true,opacity:.045,side:THREE.DoubleSide,depthWrite:false})));disk.rotation.x=-Math.PI/2;ecliptic.add(disk);
+   const selectedPoint=new THREE.Mesh(geometry(new THREE.SphereGeometry(.15,24,16)),material(new THREE.MeshBasicMaterial({color:0xffe7bc})));group.add(selectedPoint);selectedPoint.userData.destination=p.key;pickables.push(selectedPoint);
+   const halo=new THREE.Mesh(geometry(new THREE.TorusGeometry(.29,.018,8,64)),material(new THREE.MeshBasicMaterial({color:gold})));group.add(halo);
+   const opposite=new THREE.Mesh(geometry(new THREE.SphereGeometry(.075,16,12)),material(new THREE.MeshBasicMaterial({color:blue,transparent:true,opacity:.6})));opposite.position.x=-orbitRadius*2;group.add(opposite);
+   const direction=new THREE.Vector3(-Math.sin(.18),0,Math.cos(.18));const arrow=new THREE.Mesh(geometry(new THREE.ConeGeometry(.10,.33,16)),material(new THREE.MeshBasicMaterial({color:blue})));arrow.position.set(Math.cos(.18)*orbitRadius,0,Math.sin(.18)*orbitRadius);arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);lunar.add(arrow);
+   scene.add(group);actors.set(p.key,{group,mesh:selectedPoint,radius:2.3,focusOffset:new THREE.Vector3(-orbitRadius,0,0),label:makeLabel(p.key,p.name,ascending?'ASCENDING INTERSECTION':'DESCENDING INTERSECTION')});
+  }
   let focused:Destination=live.current.destination;
   const currentLook=new THREE.Vector3(),startLook=new THREE.Vector3(),endLook=new THREE.Vector3(),startCamera=new THREE.Vector3(),endCamera=new THREE.Vector3();
   let travelStart=performance.now(),travelDuration=0,traveling=false;
@@ -96,7 +109,7 @@ export default function SpaceScene(props:Props){
     const geo=new THREE.RingGeometry(nakRadius-1,rashiRadius+1,96,1,-(start+width)*Math.PI/180,width*Math.PI/180);geometries.push(geo);highlight=new THREE.Mesh(geo,selectedArcMaterial);highlight.rotation.x=Math.PI/2;highlights.add(highlight);
     endLook.set(...worldPosition(info.longitude,43));const radial=new THREE.Vector3(...worldPosition(info.longitude,1));endCamera.copy(endLook).addScaledVector(radial,15).add(new THREE.Vector3(0,24,8));controls.minDistance=10;controls.maxDistance=75;
    }else if(actor){
-    const radius=actor.radius*(key==='saturn'?1.7:1),fit=el!.clientWidth<=760?Math.max(1,.85/camera.aspect):1;endLook.copy(actor.group.position);endCamera.copy(endLook).add(new THREE.Vector3(radius*.35,radius*.7,radius*4.9*fit));controls.minDistance=radius*1.65;controls.maxDistance=radius*15;
+    const radius=actor.radius*(key==='saturn'?1.7:1),fit=el!.clientWidth<=760?Math.max(1,.85/camera.aspect):1;endLook.copy(actor.group.position);if(actor.focusOffset)endLook.add(actor.focusOffset);endCamera.copy(endLook).add(new THREE.Vector3(radius*.35,radius*(actor.focusOffset?1.8:.7),radius*4.9*fit));controls.minDistance=radius*1.65;controls.maxDistance=radius*15;
    }
    if(actor&&key!=='overview'){
     const position=isSector?new THREE.Vector3(...worldPosition(info.placement.longitude,48)):actor.group.position;const points=[new THREE.Vector3(0,.03,0),new THREE.Vector3(position.x,.03,position.z)];connection.geometry.setFromPoints(points);connection.computeLineDistances();connection.visible=isSector;
@@ -111,7 +124,7 @@ export default function SpaceScene(props:Props){
   manager.onLoad=()=>{if(disposed)return;if(textureError){live.current.onUnavailable();return}loaded=true;move(live.current.destination,live.current.intro);live.current.onReady();};
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerStart={x:0,y:0};
   const down=(e:PointerEvent)=>{pointerStart={x:e.clientX,y:e.clientY}};
-  const up=(e:PointerEvent)=>{if(Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>6||!loaded)return;const bounds=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(pickables.filter(object=>object.parent?.visible))[0];if(hit?.object.userData.destination)live.current.onSelect(hit.object.userData.destination)};
+  const up=(e:PointerEvent)=>{if(Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>6||!loaded)return;const bounds=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1);raycaster.setFromCamera(pointer,camera);const visible=(object:THREE.Object3D)=>{let current:THREE.Object3D|null=object;while(current){if(!current.visible)return false;current=current.parent}return true};const hit=raycaster.intersectObjects(pickables.filter(visible))[0];if(hit?.object.userData.destination)live.current.onSelect(hit.object.userData.destination)};
   const lost=(e:Event)=>{e.preventDefault();live.current.onUnavailable()};renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointerup',up);renderer.domElement.addEventListener('webglcontextlost',lost);
   let last=performance.now();const projected=new THREE.Vector3(),direction=new THREE.Vector3();
   function render(now:number){if(disposed)return;frame=requestAnimationFrame(render);if(document.hidden){last=now;return}const dt=Math.min((now-last)/1000,.05);last=now;

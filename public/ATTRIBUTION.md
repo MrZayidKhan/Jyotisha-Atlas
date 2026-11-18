@@ -1,5 +1,13 @@
 # Jyotisha Atlas asset credits
 
+## Homepage and location search
+
+The homepage uses `assets/moon-nearside.jpg`, NASA's **Lunar Near Side**, credit **NASA/Goddard Space Flight Center/Arizona State University**. Source: https://science.nasa.gov/resource/lunar-near-side/ . The local image is a 1600-pixel derivative served by NASA's image service and displayed with subtle CSS contrast/brightness adjustments. NASA media-use guidelines apply; no endorsement is implied.
+
+Worldwide city lookup uses the **Open-Meteo Geocoding API**, based on **GeoNames**, under **CC BY 4.0**. API/documentation: https://open-meteo.com/en/docs/geocoding-api . GeoNames: https://www.geonames.org/ . Licence: https://creativecommons.org/licenses/by/4.0/ . Saved fallback-city names and coordinates are normalized for this app; online results are reduced to city, region, country, coordinates and IANA zone. Only the typed place query is sent to geocoding; birth dates/times are not. UTC offsets are resolved locally using the browser's IANA time-zone data.
+
+Lunar-node visuals are original geometric diagrams: gold ecliptic, inclined colored lunar path, marked crossing and directional arrow. Inclination and distances are exaggerated for explanation, not used as astronomical measurements.
+
 ## Interactive 3D observatory — surface maps
 
 Planetary and sky maps in `textures/` are by **Solar System Scope / INOVE**, used under **Creative Commons Attribution 4.0 International**: https://creativecommons.org/licenses/by/4.0/ . Original collection and download links: https://www.solarsystemscope.com/textures/ . Solar System Scope is not affiliated with this project.

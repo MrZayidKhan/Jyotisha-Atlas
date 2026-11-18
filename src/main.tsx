@@ -5,44 +5,15 @@ import { calculate, signs, type Birth, type Chart } from './engine';
 import { library, sources, meanings, houses, readings, groundedAnswer } from './knowledge';
 import './style.css';
 import './refinements.css';
+import './home.css';
+import BirthForm from './BirthForm';
+import HomeHero from './HomeHero';
+import KnowledgeLibrary from './KnowledgeLibrary';
 const Observatory = lazy(() => import('./Observatory'));
-const cities = [{ name: 'Bhopal, India', lat: 23.2599, lon: 77.4126, offset: 5.5 }, { name: 'Mumbai, India', lat: 19.076, lon: 72.8777, offset: 5.5 }, { name: 'Delhi, India', lat: 28.6139, lon: 77.209, offset: 5.5 }, { name: 'Bengaluru, India', lat: 12.9716, lon: 77.5946, offset: 5.5 }, { name: 'Kolkata, India', lat: 22.5726, lon: 88.3639, offset: 5.5 }, { name: 'Chennai, India', lat: 13.0827, lon: 80.2707, offset: 5.5 }, { name: 'Hyderabad, India', lat: 17.385, lon: 78.4867, offset: 5.5 }, { name: 'Pune, India', lat: 18.5204, lon: 73.8567, offset: 5.5 }];
 const dateText = (c: Chart) => `${c.birth.date} · ${c.birth.unknown ? 'Time unknown' : c.birth.time} · ${c.birth.place}`;
 function Source({ id = 'brihat' }: {
     id?: string;
 }) { const s = sources.find(s => s.id === id)!; return <a className="source" href={s.url} target="_blank" rel="noreferrer">{s.title} ↗</a>; }
-function BirthForm({ onCreate }: {
-    onCreate: (b: Birth) => void;
-}) {
-    const [place, setPlace] = useState('');
-    const [lat, setLat] = useState('');
-    const [lon, setLon] = useState('');
-    const [offset, setOffset] = useState('');
-    const [unknown, setUnknown] = useState(false);
-    const [confirmed, setConfirmed] = useState(false);
-    const [error, setError] = useState('');
-    const [busy, setBusy] = useState(false);
-    const matches = place.length > 1 && !lat ? cities.filter(c => c.name.toLowerCase().includes(place.toLowerCase())) : [];
-    return <form className="birth-form" onSubmit={async (e) => { e.preventDefault(); const f = new FormData(e.currentTarget); setError(''); if (!confirmed) {
-        setError('Confirm the coordinates and historical UTC offset for your birth date.');
-        return;
-    } if (!lat || !lon || !offset) {
-        setError('Enter coordinates and the UTC offset. Use 0 explicitly for Greenwich or the equator.');
-        return;
-    } setBusy(true); try {
-        await new Promise(r => setTimeout(r, 60));
-        onCreate({ name: String(f.get('name') || ''), date: String(f.get('date')), time: String(f.get('time') || ''), place, lat: Number(lat), lon: Number(lon), offset: Number(offset), unknown });
-    }
-    catch (err) {
-        setError((err as Error).message);
-    }
-    finally {
-        setBusy(false);
-    } }}>
- <label>Name <small>optional</small><input name="name" maxLength={80} placeholder="What should we call you?"/></label><div className="input-row"><label>Date of birth<input type="date" name="date" min="1900-01-01" max={new Date().toISOString().slice(0, 10)} required/></label><label>Time of birth<input type="time" name="time" required={!unknown} disabled={unknown}/></label></div><label className="check"><input type="checkbox" checked={unknown} onChange={e => setUnknown(e.target.checked)}/><span>I don’t know my birth time</span></label>{unknown && <p className="form-help">We’ll use a labeled local-noon reference with a daily Moon range. Lagna, houses and personalized readings are withheld.</p>}
- <label>Birthplace<input name="place" required value={place} placeholder="Search Indian cities, or enter any place" onChange={e => { setPlace(e.target.value); setConfirmed(false); setLat(''); setLon(''); setOffset(''); }} autoComplete="off"/></label>{matches.length > 0 && <div className="city-results">{matches.map(c => <button type="button" key={c.name} onClick={() => { setPlace(c.name); setLat(String(c.lat)); setLon(String(c.lon)); setOffset(String(c.offset)); setConfirmed(false); }}>{c.name} <span>Use coordinates ↗</span></button>)}</div>}
- <details className="location-detail" open={!!place}><summary>Coordinates & time zone at birth</summary><p className="form-help">City lookup covers eight Indian cities. For other places, enter coordinates manually. Confirm the UTC offset on the birth date, including any historical daylight saving.</p><div className="input-row triple"><label>Latitude °<input type="number" step="any" min="-66" max="66" required value={lat} onChange={e => { setLat(e.target.value); setConfirmed(false); }} placeholder="23.2599"/></label><label>Longitude °<input type="number" step="any" min="-180" max="180" required value={lon} onChange={e => { setLon(e.target.value); setConfirmed(false); }} placeholder="77.4126"/></label><label>UTC offset hours<input type="number" step="0.25" min="-14" max="14" required value={offset} onChange={e => { setOffset(e.target.value); setConfirmed(false); }} placeholder="5.5"/></label></div><label className="check"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}/><span>I confirm these coordinates and the UTC offset at birth.</span></label></details><p role="alert" className="form-error">{error}</p><button disabled={busy} className="button">{busy ? 'Calculating…' : 'Reveal my birth sky'} <b>↗</b></button><p className="form-help">Birth details stay on this page. Nothing is saved to an account.</p></form>;
-}
 function Zodiac({ chart, selected, onSelect }: {
     chart: Chart;
     selected: string;
@@ -82,7 +53,6 @@ function Chat({ chart }: {
     } setMessages([...history, { role: 'assistant', text: response }]); setBusy(false); }
     return <section id="ask" className="chat-section wrap"><div><p className="eyebrow">Ask the atlas</p><h2>Stay curious.</h2><p className="section-copy">Follow a placement. Unpack a word. Ask what the sources can—and cannot—tell you.</p><div className="chat-mode">{aiEnabled ? <label><input type="checkbox" checked={online} onChange={e => setOnline(e.target.checked)}/> Use connected AI retrieval</label> : 'Source guide · works without an API key'}</div><p className="form-help">{online ? 'Your question, recent conversation and chart facts will be sent to the configured LLM. It selects from verified answer cards.' : 'Local answers use the curated library and your calculated chart. Free-form AI awaits server configuration.'}</p></div><div className="chat-panel"><div className="chat-log" role="log" aria-live="polite">{messages.length === 0 ? <div className="chat-welcome"><span>J / A</span><h3>What would you like to understand?</h3><p>Try a question to begin.</p><div className="chips">{['Where is Chandra?', 'Explain Lagna', 'What are Bhavas?'].map(q => <button onClick={() => ask(q)} key={q}>{q} ↗</button>)}</div></div> : messages.map((m, i) => <div className={`message ${m.role}`} key={i}><span>{m.role === 'user' ? 'YOU' : 'ATLAS'}</span><p>{m.text}</p></div>)}{busy && <p className="form-help">Finding a supported answer…</p>}</div><form className="chat-input" onSubmit={e => { e.preventDefault(); ask(question); }}><input aria-label="Question about your chart" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about your chart…" maxLength={600} required/><button disabled={busy} aria-label="Send question">↗</button></form></div></section>;
 }
-function Library() { const [query, setQuery] = useState(''); const [category, setCategory] = useState('All'); const entries = library.filter(e => (category === 'All' || e.category === category) && `${e.title} ${e.text}`.toLowerCase().includes(query.toLowerCase())); return <section id="library" className="knowledge-section wrap"><div className="section-top"><div><p className="eyebrow">The knowledge library</p><h2>A language of the sky.</h2></div><input className="search" aria-label="Search library" placeholder="Search a concept…" value={query} onChange={e => setQuery(e.target.value)}/></div><div className="chips filters">{['All', ...new Set(library.map(e => e.category))].map(c => <button key={c} onClick={() => setCategory(c)} aria-pressed={category === c}>{c}</button>)}</div><div className="knowledge-grid">{entries.map(e => <details key={e.title}><summary><span>{e.category}</span>{e.title}<b>+</b></summary><p>{e.text}</p><Source id={e.source}/></details>)}</div>{entries.length === 0 && <p role="status">No matching concepts. Try a shorter search.</p>}</section>; }
 function Results({ chart, replay }: {
     chart: Chart;
     replay: () => void;
@@ -99,6 +69,21 @@ function App() {
         window.addEventListener('beforeprint',prepare);window.addEventListener('afterprint',restore);
         return()=>{window.removeEventListener('beforeprint',prepare);window.removeEventListener('afterprint',restore)};
     },[chart]);
-    return <><div className="ambient"/><header className="nav wrap"><a className="wordmark" href="#top"><span>JA</span> Jyotisha Atlas</a><nav><a href="#birth-details">Your birth sky</a><a href="#library">Library</a><a href="#ask">Ask Atlas</a></nav><a className="nav-cta" href="#birth-details">Enter the observatory ↗</a></header><main id="top"><section className="hero wrap"><div className="hero-copy"><p className="eyebrow"><span />An Indian astral observatory</p><h1>Your moment.<br /><em>Written in sky.</em></h1><p className="lede">Travel back to your first sky. Explore its planetary patterns, then discover the ideas and traditions that give them meaning.</p><div className="hero-actions"><a className="button" href="#birth-details">Find your birth sky <b>↗</b></a><button className="text-link" onClick={previewSample}>Preview 3D · sample sky ↗</button></div><div className="hero-foot"><span>CALCULATED SKY</span><span className="line"/><span>TRADITIONAL PERSPECTIVES</span></div></div><div className="sky-stage"><div className="orbital orbital-one"/><div className="orbital orbital-two"/><img className="moon real-moon" src="/assets/moon.jpg" alt="NASA lunar image"/><p className="stage-label label-top">CHANDRA<br />THE LUNAR WORLD</p><p className="stage-label label-bottom">A MOMENT IN THE COSMOS</p></div></section><section className="journey-teaser wrap"><span>01 / ENTER YOUR MOMENT</span><span>02 / WATCH THE SKY ALIGN</span><span>03 / EXPLORE YOUR ATLAS</span></section><section id="birth-details" className="birth-section wrap"><div className="form-intro"><p className="eyebrow"><span />The beginning of your atlas</p><h2>Every sky starts<br />with a moment.</h2><p>Date, time, and place let us calculate the planetary longitudes for your birth. Then the observatory opens.</p><div className="form-quote">“An invitation to understand,<br />not a promise of destiny.”</div><p className="note">APPROXIMATE LAHIRI · WHOLE-SIGN BHAVAS</p></div><BirthForm onCreate={b => { const c = calculate(b); setChart(c); setJourney(true); }}/></section>{chart && !journey && <Results key={`results-${chart.utc}-${chart.birth.name}`} chart={chart} replay={() => setJourney(true)}/>}<Chat key={`chat-${chart?.utc ?? 'empty'}`} chart={chart}/><Library /><section className="ethics wrap"><p className="eyebrow">A thoughtful relationship with tradition</p><h2>Read with curiosity.<br /><em>Keep your agency.</em></h2><p>Jyotisha is a historical and cultural tradition. Its symbolic interpretations are not scientifically verified predictions. This atlas makes calculation methods, source limits, and uncertainty visible so you can explore thoughtfully.</p></section></main><footer className="wrap"><a className="wordmark" href="#top"><span>JA</span> Jyotisha Atlas</a><p>An IKS learning project. Birth details remain in memory and clear on refresh. Optional AI sends only the disclosed question, conversation and answer cards.</p><a href="/ATTRIBUTION.md">Sources & credits ↗</a></footer><AnimatePresence>{journey && chart && <Suspense fallback={<div className="observatory"><div className="observatory-loading">Opening your 3D observatory…</div></div>}><Observatory chart={chart} done={finish}/></Suspense>}</AnimatePresence><div className="print-footer">Jyotisha Atlas · Educational report. Traditional interpretations are not scientifically verified. Approximate sidereal calculation; consult calculation details above.</div></>;
+    return <>
+      <div className="ambient"/>
+      <header className="nav wrap"><a className="wordmark" href="#top"><span>JA</span>Jyotisha Atlas</a><nav aria-label="Primary navigation"><a href="#library">Discover</a><a href="#ask">Ask Atlas</a></nav><a className="nav-cta" href="#birth-details">Create your atlas <span>↗</span></a></header>
+      <main id="top">
+        <HomeHero preview={previewSample}/>
+        <section className="home-intro wrap"><p>A sky you can move through.<br/><span>A tradition you can understand.</span></p><div><span>01 · Your moment</span><i>→</i><span>02 · Your sky</span><i>→</i><span>03 · Your perspective</span></div></section>
+        <section id="birth-details" className="birth-section wrap"><div className="form-intro"><p className="eyebrow">Make it personal</p><h2>Start with<br/><em>your moment.</em></h2><p>Just a few details open your personal observatory. We’ll take care of the coordinates.</p><div className="form-aside-note"><span>01 / 03</span><p>Enter your details.<br/>Watch your sky unfold.</p></div></div><BirthForm onCreate={birth=>{setChart(calculate(birth));setJourney(true)}}/></section>
+        {chart&&!journey&&<Results key={'results-'+chart.utc+'-'+chart.birth.name} chart={chart} replay={()=>setJourney(true)}/>}
+        <Chat key={'chat-'+(chart?.utc??'empty')} chart={chart}/>
+        <KnowledgeLibrary/>
+        <section className="ethics wrap"><div><p className="eyebrow">Curiosity, with perspective</p><h2>Keep your wonder.<br/><em>Keep your agency.</em></h2></div><p>Jyotisha is a cultural tradition. Explore its symbols as ideas for reflection, with sources and uncertainty in view. Astrological interpretations are not scientifically verified predictions.</p></section>
+      </main>
+      <footer className="wrap"><a className="wordmark" href="#top"><span>JA</span>Jyotisha Atlas</a><p>A contemporary observatory for an ancient tradition.<br/>An IKS learning project.</p><a href="/ATTRIBUTION.md">Sources & credits ↗</a></footer>
+      <AnimatePresence>{journey&&chart&&<Suspense fallback={<div className="observatory"><div className="observatory-loading">Opening your 3D observatory…</div></div>}><Observatory chart={chart} done={finish}/></Suspense>}</AnimatePresence>
+      <div className="print-footer">Jyotisha Atlas · Educational report. Traditional interpretations are not scientifically verified. Approximate sidereal calculation; consult calculation details above.</div>
+    </>;
 }
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

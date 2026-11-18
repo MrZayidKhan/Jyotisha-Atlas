@@ -1,0 +1,8 @@
+import {useState} from 'react';
+import {library,sources} from './knowledge';
+export default function KnowledgeLibrary(){
+ const [query,setQuery]=useState(''),[category,setCategory]=useState('All'),[expanded,setExpanded]=useState(false);
+ const matches=library.filter(entry=>(category==='All'||entry.category===category)&&`${entry.title} ${entry.text}`.toLowerCase().includes(query.toLowerCase()));
+ const visible=expanded||query?matches:matches.slice(0,6);
+ return <section id="library" className="knowledge-section wrap"><div className="section-top"><div><p className="eyebrow">A little knowledge goes a long way</p><h2>Get to know your sky.</h2></div><input className="search" aria-label="Search library" placeholder="Find a concept…" value={query} onChange={e=>setQuery(e.target.value)}/></div><div className="chips filters">{['All',...new Set(library.map(e=>e.category))].map(c=><button key={c} onClick={()=>{setCategory(c);setExpanded(false)}} aria-pressed={category===c}>{c}</button>)}</div><div className="knowledge-grid">{visible.map(entry=><details key={entry.title}><summary><span>{entry.category}</span>{entry.title}<b>+</b></summary><p>{entry.text}</p><a className="source" href={sources.find(s=>s.id===entry.source)!.url} target="_blank" rel="noreferrer">Source & context ↗</a></details>)}</div>{matches.length===0&&<p role="status" className="section-copy">No matching concepts. Try a shorter search.</p>}{!query&&matches.length>6&&<button className="library-more" onClick={()=>setExpanded(v=>!v)}>{expanded?'Show fewer concepts ↑':`Explore all ${matches.length} concepts ↗`}</button>}</section>
+}

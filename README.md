@@ -1,5 +1,28 @@
 # Jyotisha Atlas
 
+## Latest interface update
+
+The homepage has a simpler hero, a detailed NASA LRO lunar image, rounded controls and a compact library preview (six concepts initially; expand or filter for more).
+
+Birthplace is now a keyboard-accessible searchable dropdown. Selecting a city fills its WGS84 coordinates and IANA zone. Worldwide results come directly from Open-Meteo / GeoNames; 20 saved fallback cities cover popular Indian and international places if the network is unavailable. Only the public place-name query goes to geocoding, never the birth date/time. City coordinates represent a city center; use **Use precise coordinates instead** for a hospital, village or exact point.
+
+The UTC offset is resolved locally for the actual birth date and time, including DST rules, using `Intl.DateTimeFormat` and the browser's IANA data. A repeated or nonexistent wall time is explicitly blocked until corrected or a documented UTC offset is entered manually. Changing coordinates away from the chosen city clears its automatic time-zone association and requires a manual offset. Unknown time uses an explicit local-noon reference. Zero latitude, longitude and offset are valid.
+
+Lunar nodes now use crossing orbital-path diagrams, a highlighted intersection and an ascending/descending arrow. Gold identifies the ecliptic; blue/purple identifies the inclined lunar path. Tilt and scale are exaggerated for readability; the diagram is not used in calculations.
+
+New files: `src/BirthForm.tsx`, `src/locations.ts`, `src/HomeHero.tsx`, `src/KnowledgeLibrary.tsx`, `src/home.css`; node rendering is in `src/SpaceScene.tsx`. No new production dependency or API key is required for this update.
+
+Additional verification:
+
+```powershell
+node --experimental-strip-types --test tests/locations.test.mjs
+node --import tsx --test tests/birth-form.test.tsx
+```
+
+Six location/time-zone tests and four DOM interaction tests supplement the existing ten calculation/destination checks. The homepage was visually checked at desktop size; the live geocoding service was checked with Mysuru. Full mobile and node-camera visual regression testing remains incomplete.
+
+Development dependency audit (2026-11-18): npm reports a picomatch ReDoS advisory inherited through Vite's build/development tooling. The registry's latest picomatch (4.0.7) is still flagged, so no force downgrade or unverified override was applied. `npm audit --omit=dev` reports zero vulnerabilities in production dependencies. Recheck when an upstream patch is available; the published site is a static build and does not run Vite on the server.
+
 React/TypeScript educational observatory: enter birth details, watch a cinematic alignment, inspect calculated grahas, explore traditional concepts and print a report.
 
 ## Run
@@ -12,7 +35,7 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-Open http://127.0.0.1:5173 . Choose **Preview 3D · sample sky** for a labeled Greenwich sample, or enter birth details (for example 2000-01-01, 12:00, Bhopal, UTC +5.5). Confirm coordinates and the historical UTC offset. After a camera arrival, the 3D observatory **stays open**. Select Chandra, another graha, Moon Rashi, Nakshatra or Lagna inside the scene to fly to that destination and read the corresponding chart explanation. Drag to orbit, scroll/pinch to zoom, pause rotation or return to the overview. **Chart & report** or Escape returns to the table and report. Inputs stay in memory; refresh clears them. Eight Indian cities have local lookup; other places use manual coordinates and UTC offset including daylight saving.
+Open http://127.0.0.1:5173 . Choose **Try the 3D experience** for a labeled Greenwich sample, or enter a birth date/time and select a city from the dropdown. Coordinates and the birth-date time-zone offset are filled automatically. After arrival, the 3D observatory **stays open**. Select Chandra, another graha, Moon Rashi, Nakshatra or Lagna inside the scene to travel to that factor and read its explanation. Drag to orbit, scroll/pinch to zoom, pause rotation or return to the overview. **Chart & report** or Escape returns to the report. Inputs stay in memory; refresh clears them.
 
 ## Optional backend and AI
 
