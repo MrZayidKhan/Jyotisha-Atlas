@@ -57,7 +57,7 @@ python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 
 Expect `Uvicorn running on http://127.0.0.1:8000`. Vite proxies `/api/*` to FastAPI. Inspect endpoints at http://127.0.0.1:8000/docs . The frontend chart and local source guide work without this service.
 
-For Gemini retrieval, create `.env` beside package.json using `.env.example`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY`. The optional `GEMINI_MODEL` defaults to `gemini-2.5-flash-lite`. Keep the key server-side. Restart FastAPI and reload the frontend. Chat offers the AI toggle when `/api/health` reports `llm_configured: true`.
+For Gemini retrieval, create `.env` beside package.json using `.env.example`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY`. The optional `GEMINI_MODEL` defaults to `gemini-3.5-flash-lite`. Keep the key server-side. Restart FastAPI and reload the frontend. Chat offers the AI toggle when `/api/health` reports `llm_configured: true`.
 
 AI receives the question, recent messages and server-generated answer cards. It may select only an allowed card ID; the server supplies the text. It cannot generate positions, rules or source references. This supports constrained follow-ups, not unrestricted astrology answers. Unsupported questions receive an explicit source-limited response. Local retrieval remains available if the provider fails.
 

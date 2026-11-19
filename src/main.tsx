@@ -6,11 +6,12 @@ import { sources, meanings, houses, groundedAnswer } from './knowledge';
 import './style.css';
 import './refinements.css';
 import './home.css';
+import './navigation.css';
 import BirthForm from './BirthForm';
 import ChartReading from './ChartReading';
 import { advancedAnswer } from './jyotisha';
 import HomeHero from './HomeHero';
-import KnowledgeLibrary from './KnowledgeLibrary';
+import BeginnerGuide from './BeginnerGuide';
 const Observatory = lazy(() => import('./Observatory'));
 class ObservatoryBoundary extends React.Component<React.PropsWithChildren<{done:()=>void}>,{failed:boolean}>{
     state={failed:false};
@@ -55,7 +56,9 @@ function Chat({ chart }: {
             if (!r.ok)
                 throw Error();
             const d = await r.json();
+            if(typeof d.answer!=='string') throw Error();
             response = d.answer;
+            if(d.mode==='source-guide') response += '\n\nAnswered by the built-in chart guide.';
         }
         catch {
             response += '\n\nThe AI connection is unavailable; this answer comes from the local source guide.';
@@ -68,16 +71,47 @@ function Results({ chart, replay, openHorizon }: {
     replay: () => void;
     openHorizon: () => void;
 }) { const [selected, setSelected] = useState('moon'); const p = chart.placements.find(p => p.key === selected)!; return <section id="chart" className="results wrap"><div className="section-top"><div><p className="eyebrow">Your personal atlas</p><h2>{chart.birth.name ? `${chart.birth.name}’s` : 'Your'} birth sky.</h2><p className="section-copy">{dateText(chart)}</p></div><div className="result-actions"><button className="outline-button" onClick={replay}>Open 3D observatory ↗</button><button className="outline-button" onClick={openHorizon}>Birthplace horizon ↗</button><button className="button" onClick={() => window.print()}>Save report / PDF ↓</button></div></div><nav className="report-nav" aria-label="Jump to report section"><a href="#placements">Placements</a>{!chart.uncertain&&<><a href="#reading">Reading</a><a href="#dasha-timeline">Dasha timeline</a></>}<a href="#ask">Ask Atlas</a></nav><div className="precision-note">{chart.uncertain ? 'Time unknown: positions use local noon. Daily ranges are shown; houses, Lagna and readings are withheld.' : 'Lahiri sidereal convention · whole-sign houses · mean lunar nodes.'} Ayanamsa {chart.ayanamsa.toFixed(4)}°. Boundary-sensitive factors need specialist ephemeris verification.</div><div className="summary-strip"><div><span>LAGNA / RISING</span><strong>{chart.lagna === null ? 'Time required' : signs[Math.floor(chart.lagna / 30)].split(' · ')[0]}</strong></div><div><span>{chart.uncertain ? 'NOON REFERENCE' : 'MOON NAKSHATRA'}</span><strong>{chart.nakshatra}</strong></div><div><span>PADA</span><strong>{chart.pada} / 4{chart.uncertain ? ' · provisional' : ''}</strong></div><div><span>FRAME</span><strong>Sidereal</strong></div></div><div className="chart-grid"><Zodiac chart={chart} selected={selected} onSelect={setSelected}/><aside className="placement-panel" key={selected}><p className="eyebrow">A closer reading</p>{!['rahu', 'ketu'].includes(p.key) && <img src={p.key==='moon'?'/assets/moon-nearside-480.webp':`/assets/${p.key}.jpg`} alt={p.name} loading="lazy" decoding="async"/>}<h3>{p.name}</h3><p className="placement-degree">{p.degree.toFixed(2)}° <span>{signs[p.sign]}</span></p><p>{p.house ? `Bhava ${p.house} · ${houses[p.house - 1]}` : 'Houses unavailable without birth time'}{p.retrograde ? ' · Retrograde' : ''}</p><p>Traditional associations: {meanings[p.key]}. This is an introductory symbol, not a personal prediction.</p><Source /><p className="form-help">{['rahu', 'ketu'].includes(p.key) ? 'A calculated lunar node, not a physical planet.' : 'NASA imagery is illustrative; appearance is not reconstructed for your birth moment.'}</p></aside></div><div id="placements" className="placements-table"><table><caption>Calculated graha placements{chart.uncertain ? ' · local-noon reference' : ''}</caption><thead><tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>Bhava</th><th>Motion / day range</th></tr></thead><tbody>{chart.placements.map(p => <tr key={p.key} onClick={() => setSelected(p.key)}><td><button className="table-select" onClick={() => setSelected(p.key)}>{p.name} ↗</button></td><td>{signs[p.sign]}</td><td>{p.degree.toFixed(3)}°</td><td>{p.house ?? '—'}</td><td>{p.range ? `${p.range[0].toFixed(2)}° → ${p.range[1].toFixed(2)}° longitude` : p.retrograde ? 'Retrograde' : 'Direct'}</td></tr>)}</tbody></table></div><ChartReading chart={chart}/><details className="method-note"><summary>Calculation details, limitations & sources</summary><p>{chart.method}. UTC reference: {chart.utc}. Tropical positions are calculated by Astronomy Engine. Sidereal longitudes use a Lahiri anchor with IAU 2006 precession and the nutation of date. The ascendant uses apparent sidereal time and true obliquity. Rahu uses a mean-node polynomial; Ketu is opposite. Nakshatras are equal sidereal divisions, houses are whole-sign.</p><p>Supported years: 1900–2100; latitude ±66°. Small differences can change a sign or Nakshatra at a boundary. With unknown time, noon is explicitly a reference, not the actual birth moment.</p>{sources.map(s => <p key={s.id}><Source id={s.id}/><br />{s.note}</p>)}</details></section>; }
+type Page = 'home' | 'birth-details' | 'chart' | 'ask' | 'guide';
+function currentPage(): Page {
+    switch (window.location.hash) {
+        case '#birth-details': return 'birth-details';
+        case '#chart':
+        case '#placements':
+        case '#reading':
+        case '#dasha-timeline': return 'chart';
+        case '#ask': return 'ask';
+        case '#library':
+        case '#guide': return 'guide';
+        default: return 'home';
+    }
+}
 function App() {
     const [chart, setChart] = useState<Chart | null>(null);
     const [journey, setJourney] = useState(false);
     const [startHorizon,setStartHorizon]=useState(false);
     const [revision,setRevision]=useState(0);
     const [focusReport,setFocusReport]=useState(false);
+    const [page,setPage]=useState(currentPage);
+    useEffect(()=>{
+        const update=()=>{
+            setPage(currentPage());
+            const anchor=window.location.hash.slice(1);
+            requestAnimationFrame(()=>{
+                if(['placements','reading','dasha-timeline','library'].includes(anchor)){
+                    document.getElementById(anchor)?.scrollIntoView();
+                }else{
+                    window.scrollTo(0,0);
+                }
+            });
+        };
+        window.addEventListener('hashchange',update);
+        return()=>window.removeEventListener('hashchange',update);
+    },[]);
     const finish=useCallback(()=>{setJourney(false);setFocusReport(true)},[]);
     function create(birth:Birth,show3D:boolean){
         const next=calculate(birth);
-        setChart(next);setRevision(v=>v+1);setStartHorizon(false);setJourney(show3D);setFocusReport(!show3D);
+        setChart(next);setRevision(v=>v+1);setStartHorizon(false);setPage('chart');setJourney(show3D);setFocusReport(!show3D);
+        window.location.hash='chart';
     }
     const previewSample=()=>create({name:'Sample chart',date:'2000-01-01',time:'12:00',place:'Greenwich · sample',lat:51.48,lon:0,offset:0,unknown:false},true);
     const focusChart=useCallback(()=>{
@@ -85,7 +119,7 @@ function App() {
         const el=document.getElementById('chart');
         if(el){el.tabIndex=-1;el.focus({preventScroll:true});el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
         setFocusReport(false);
-    },[focusReport,journey]);
+    },[focusReport,journey,page]);
     useEffect(()=>{const frame=requestAnimationFrame(focusChart);return()=>cancelAnimationFrame(frame)},[focusChart]);
     useEffect(()=>{
         let originallyOpen=false;
@@ -96,17 +130,19 @@ function App() {
     },[chart]);
     return <>
       <div className="ambient"/>
-      <header className="nav wrap"><a className="wordmark" href="#top"><span>JA</span>Jyotisha Atlas</a><nav aria-label="Primary navigation">{chart&&<a href="#chart">My chart</a>}<a href="#library">Glossary</a><a href="#ask">Ask Atlas</a><a href="/GUIDE.md" target="_blank" rel="noreferrer">Guide</a></nav><a className="nav-cta" href="#birth-details">{chart?'Edit birth details':'Create chart'} <span aria-hidden="true">↗</span></a></header>
-      <main id="top">
-        <HomeHero preview={previewSample}/>
-        <section id="birth-details" className="birth-section wrap"><div className="form-intro"><h2>Your birth chart</h2><p>Enter your local birth time and choose a city. Atlas fills the coordinates and looks up the time zone for that date.</p><a className="source" href="/GUIDE.md" target="_blank" rel="noreferrer">How to read the chart ↗</a></div><BirthForm onCreate={create}/></section>
-        {chart&&<div className="report-holder" hidden={journey}><Results key={revision} chart={chart}
+      <header className="nav wrap atlas-nav"><a className="wordmark" href="#top"><span>JA</span>Jyotisha Atlas</a><nav aria-label="Primary navigation">{chart&&<a href="#chart" aria-current={page==='chart'?'page':undefined}>My chart</a>}{chart&&<a href="#ask" aria-current={page==='ask'?'page':undefined}>Ask Atlas</a>}<a href="#guide" aria-current={page==='guide'?'page':undefined}>Beginner guide</a></nav><a className="nav-cta" href="#birth-details" aria-current={page==='birth-details'?'page':undefined}>{chart?'Edit details':'Create chart'}</a></header>
+      <main id="top" className={`atlas-page page-${page}`}>
+        {page==='home'&&<HomeHero preview={previewSample}/>}
+        <div hidden={page!=='birth-details'}>
+            <section id="birth-details" className="birth-section wrap"><div className="form-intro"><h1>Your birth chart</h1><p>Enter your local birth time and choose a city. Atlas fills in the coordinates and finds the time zone for that date.</p><a className="source" href="#guide">How to read the chart</a></div><BirthForm onCreate={create}/></section>
+        </div>
+        {chart&&<div className="report-holder" hidden={page!=='chart'||journey}><Results key={revision} chart={chart}
             replay={()=>{setStartHorizon(false);setJourney(true)}} openHorizon={()=>{setStartHorizon(true);setJourney(true)}}/></div>}
-        <Chat key={revision} chart={chart}/>
-        <KnowledgeLibrary/>
-        <section className="ethics wrap"><div><p className="eyebrow">Curiosity, with perspective</p><h2>Keep your wonder.<br/><em>Keep your agency.</em></h2></div><p>Jyotisha is a cultural tradition. Explore its symbols as ideas for reflection, with sources and uncertainty in view. Astrological interpretations are not scientifically verified predictions.</p></section>
+        {chart&&<div hidden={page!=='ask'}><Chat key={revision} chart={chart}/></div>}
+        {!chart&&(page==='chart'||page==='ask')&&<section className="atlas-empty wrap"><h1>Start with a chart</h1><p>Create a chart to see your placements and ask Atlas about them.</p><a className="button" href="#birth-details">Create chart</a></section>}
+        {page==='guide'&&<BeginnerGuide/>}
       </main>
-      <footer className="wrap"><a className="wordmark" href="#top"><span>JA</span>Jyotisha Atlas</a><p>An IKS learning project.</p><div className="footer-links"><a href="/GUIDE.md">Complete guide ↗</a><a href="/ATTRIBUTION.md">Sources &amp; credits ↗</a></div></footer>
+      <footer className="wrap"><a className="wordmark" href="#top"><span>JA</span>Jyotisha Atlas</a><p>An IKS learning project.</p><div className="footer-links"><a href="#guide">Beginner guide</a><a href="/ATTRIBUTION.md">Sources &amp; credits</a></div></footer>
       <AnimatePresence onExitComplete={()=>requestAnimationFrame(focusChart)}>{journey&&chart&&<ObservatoryBoundary done={finish}>
         <Suspense fallback={<div className="observatory"><div className="observatory-loading"><p role="status">Opening your observatory…</p><button onClick={finish}>Open chart &amp; report ↗</button></div></div>}><Observatory chart={chart} done={finish} startHorizon={startHorizon}/></Suspense>
       </ObservatoryBoundary>}</AnimatePresence>

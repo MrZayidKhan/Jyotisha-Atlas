@@ -1,12 +1,11 @@
 export default function HomeHero({preview}:{preview:()=>void}){
  return <section className="home-hero wrap">
   <div className="home-hero-copy">
-   <p className="home-kicker">INTERACTIVE JYOTISHA ATLAS</p>
    <h1>Explore the sky<br/><em>at your birth.</em></h1>
    <p className="home-lede">Create your Jyotisha birth chart, fly through your planetary placements, and see how each traditional reading is calculated.</p>
    <div className="home-actions">
-    <a className="button" href="#birth-details">Create my birth chart <span aria-hidden="true">↗</span></a>
-    <button className="home-play" onClick={preview}><span aria-hidden="true">▷</span>Explore a sample sky</button>
+    <a className="button" href="#birth-details">Create my birth chart</a>
+    <button className="home-play" onClick={preview}>Explore a sample sky</button>
    </div>
   </div>
   <figure className="home-moon-scene">

@@ -30,16 +30,18 @@ test('signed-in chat recalculates facts and falls back without credentials',asyn
 
 test('connected chat uses provider-selected evidence without sending birth identifiers',async t=>{
  const fake=t.mock.method(globalThis,'fetch',async (url,request)=>{
-  assert.equal(url,'https://api.openai.com/v1/responses');
+  assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
+  assert.equal(request.headers['x-goog-api-key'],'test');
   const input=JSON.parse(request.body);
-  assert.equal(input.store,false);
-  assert.doesNotMatch(input.input,/Private Name|Private Place/);
-  const cards=JSON.parse(input.input).cards;
+  assert.equal(input.generationConfig.responseMimeType,'application/json');
+  const content=input.contents[0].parts[0].text;
+  assert.doesNotMatch(content,/Private Name|Private Place/);
+  const cards=JSON.parse(content).cards;
   assert.ok(cards.some(card=>card.topic==='Jupiter'||card.topic==='Guru'));
-  return Response.json({output:[{content:[{type:'output_text',text:'{"index":0}'}]}]});
+  return Response.json({candidates:[{content:{parts:[{text:'{"index":0}'}]}}]});
  });
  const request=ask({...data,birth:{...data.birth,name:'Private Name',place:'Private Place'}},auth);
- const result=await (await worker.fetch(request,{...env,OPENAI_API_KEY:'test',OPENAI_MODEL:'test'})).json();
+ const result=await (await worker.fetch(request,{...env,GEMINI_API_KEY:'test'})).json();
  assert.equal(fake.mock.callCount(),1);
  assert.equal(result.mode,'ai-retrieval');
  assert.match(result.answer,/Mahadasha/);

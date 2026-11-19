@@ -26,11 +26,11 @@ export default function SpaceScene(props:Props){
   const camera=new THREE.PerspectiveCamera(42,1,.06,1400);camera.position.set(35,44,68);
   const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.065;controls.enablePan=false;controls.rotateSpeed=.48;controls.zoomSpeed=.6;controls.minDistance=3;controls.maxDistance=140;controls.target.set(0,0,0);
   const textures:THREE.Texture[]=[],materials:THREE.Material[]=[],geometries:THREE.BufferGeometry[]=[],actors=new Map<string,Actor>(),pickables:THREE.Object3D[]=[];
-  let disposed=false,frame=0,loaded=false;
+  let disposed=false,frame=0,loaded=false,inView=true,hasMoonCloseup=false;
   const loader=new THREE.TextureLoader();
   const loads=new Map<string,Promise<THREE.Texture|null>>();
   const upgrades=new Map<string,()=>void>();
-  const solar=solarEffects(bodies.sun.radius);
+  let solar:ReturnType<typeof solarEffects>|undefined;
   function map(file:string,colorSpace:string=THREE.SRGBColorSpace){
    const cached=loads.get(file);if(cached)return cached;
    const loading=loader.loadAsync(`/textures/${file}`).then(texture=>{
@@ -61,28 +61,41 @@ export default function SpaceScene(props:Props){
   stars.material.uniforms.pixelRatio.value=renderer.getPixelRatio();
   stars.renderOrder=-1;scene.add(stars);geometries.push(stars.geometry);materials.push(stars.material);
   const panorama=map('sky-2k.webp').then(texture=>{if(!texture||disposed)return;skyMaterial.map=texture;skyMaterial.color.set(0xc4d2ff);skyMaterial.needsUpdate=true;request()});
-  scene.add(new THREE.AmbientLight(0xb9ceff,.25));
-  const keyLight=new THREE.DirectionalLight(0xfff2dc,2.6);scene.add(keyLight,keyLight.target);
-  const fillLight=new THREE.DirectionalLight(0x8aaaff,.27);fillLight.position.set(-40,-6,-20);scene.add(fillLight);
+  scene.add(new THREE.AmbientLight(0xd5deef,.18));
+  const keyLight=new THREE.DirectionalLight(0xfff3e1,2.35);scene.add(keyLight,keyLight.target);
+  const fillLight=new THREE.DirectionalLight(0xadc7f1,.15);fillLight.position.set(-40,-6,-20);scene.add(fillLight);
   const earthMaterial=material(new THREE.MeshStandardMaterial({color:0x3c5488,roughness:.85}));
   upgrades.set('earth',()=>{void applyMap('earth.webp',earthMaterial)});
   const earth=new THREE.Mesh(geometry(new THREE.SphereGeometry(1.15,32,20)),earthMaterial);scene.add(earth);
-  const sharedSphere=geometry(new THREE.SphereGeometry(1,mobile?48:72,mobile?32:48));
+  const overviewSphere=geometry(new THREE.SphereGeometry(1,24,16));
+  const focusSphere=geometry(new THREE.SphereGeometry(1,mobile?48:72,mobile?32:48));
   let firstMoon:Promise<void>=Promise.resolve();
+  let detailedMoon:Promise<void>|undefined;
+  let moonSurface:THREE.MeshStandardMaterial|undefined;
   function makeLabel(key:string,title:string,subtitle:string){const button=document.createElement('button');button.className='world-label';button.dataset.body=key;const titleEl=document.createElement('strong');titleEl.textContent=title;const sub=document.createElement('span');sub.textContent=subtitle;button.append(titleEl,sub);button.setAttribute('aria-label',`Explore ${title}`);button.addEventListener('click',()=>live.current.onSelect(key as Destination));labelHost!.appendChild(button);return button}
   for(const p of props.chart.placements){
    if(!bodies[p.key])continue;
    const config=bodies[p.key],group=new THREE.Group();group.position.set(...worldPosition(p.longitude,config.orbit));
    const fallback:Record<string,number>={moon:0xa49f98,mercury:0xaca79b,mars:0xb36a4a,jupiter:0xb39b81,venus:0xc9af87,saturn:0xd3b690,sun:0xffaa4e};
-   const bodyMaterial=material(new THREE.MeshStandardMaterial({color:fallback[p.key],roughness:p.key==='venus'?.86:.98,metalness:0,...(p.key==='sun'?{emissive:0xffc891,emissiveIntensity:1.05}:{})}));
+   const isSun=p.key==='sun';
+   const bodyMaterial=material(new THREE.MeshStandardMaterial({color:fallback[p.key],roughness:p.key==='venus'?.86:.98,metalness:0,...(isSun?{emissive:0xffe1a6,emissiveIntensity:2.1}:{})}));
+   if(isSun){
+    bodyMaterial.onBeforeCompile=shader=>{
+     shader.fragmentShader=shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      'float mu = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0); outgoingLight = totalEmissiveRadiance * (0.36 + 0.64 * pow(mu, 0.55));\n#include <opaque_fragment>',
+     );
+    };
+   }
    if(p.key==='moon'){
+    moonSurface=bodyMaterial;
     firstMoon=applyMap('moon-preview.webp',bodyMaterial);
     upgrades.set(p.key,()=>{
-     void firstMoon.then(()=>{if(!disposed)void applyMap(mobile?'moon-2k.webp':'moon-4k.webp',bodyMaterial)});
+     detailedMoon=firstMoon.then(()=>{if(!disposed)return applyMap('moon-2k.webp',bodyMaterial)});
      void map('moon-relief.webp',THREE.NoColorSpace).then(bump=>{if(!bump||disposed)return;bodyMaterial.bumpMap=bump;bodyMaterial.bumpScale=.055;bodyMaterial.needsUpdate=true;request()});
     });
    }else upgrades.set(p.key,()=>{void applyMap(config.texture,bodyMaterial,p.key)});
-   const sphere=new THREE.Mesh(sharedSphere,bodyMaterial);sphere.scale.setScalar(config.radius);sphere.rotation.y=p.key==='moon'?-Math.PI/2:Math.PI*.3;sphere.userData.destination=p.key;group.add(sphere);pickables.push(sphere);
+   const sphere=new THREE.Mesh(focusSphere,bodyMaterial);sphere.scale.setScalar(config.radius);sphere.rotation.y=p.key==='moon'?-Math.PI/2:Math.PI*.3;sphere.userData.destination=p.key;group.add(sphere);pickables.push(sphere);
    if(p.key==='saturn'){
     group.rotation.z=.38;
     const inner=config.radius*1.25,outer=config.radius*2.25;
@@ -95,10 +108,9 @@ export default function SpaceScene(props:Props){
     })});
     const ring=new THREE.Mesh(ringGeometry,ringSurface);ring.rotation.x=-Math.PI/2;ring.userData.destination='saturn';group.add(ring);pickables.push(ring);
    }
-   if(p.key==='sun')group.add(solar.group);
    if(p.key==='venus'){
     const rimMaterial=material(new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.BackSide,blending:THREE.AdditiveBlending,uniforms:{tint:{value:new THREE.Color(0xdac8a3)}},vertexShader:'varying vec3 vNormal; varying vec3 vPosition; void main(){vec4 positionMV=modelViewMatrix*vec4(position,1.0);vNormal=normalize(normalMatrix*normal);vPosition=positionMV.xyz;gl_Position=projectionMatrix*positionMV;}',fragmentShader:'uniform vec3 tint; varying vec3 vNormal; varying vec3 vPosition; void main(){float rim=pow(1.0-abs(dot(normalize(vNormal),normalize(-vPosition))),3.5);gl_FragColor=vec4(tint,rim*0.19);}'}));
-    const rim=new THREE.Mesh(sharedSphere,rimMaterial);rim.scale.setScalar(config.radius*1.07);group.add(rim);
+    const rim=new THREE.Mesh(overviewSphere,rimMaterial);rim.scale.setScalar(config.radius*1.07);group.add(rim);
    }
    scene.add(group);actors.set(p.key,{group,mesh:sphere,radius:config.radius,label:makeLabel(p.key,p.name,config.english)});
   }
@@ -108,11 +120,15 @@ export default function SpaceScene(props:Props){
   function arc(start:number,end:number,radius:number,color:number,opacity:number){const points:THREE.Vector3[]=[];for(let a=start;a<=end+.01;a+=.5)points.push(new THREE.Vector3(...worldPosition(a,radius)));const line=new THREE.Line(geometry(new THREE.BufferGeometry().setFromPoints(points)),material(new THREE.LineBasicMaterial({color,transparent:true,opacity})));dial.add(line);return line}
   arc(0,360,rashiRadius,0xb5a17e,.37);arc(0,360,nakRadius,0xa0afcd,.18);
   const shortSigns=['MESHA','VRISHABHA','MITHUNA','KARKA','SIMHA','KANYA','TULA','VRISCHIKA','DHANU','MAKARA','KUMBHA','MEENA'];
+  const signMarks:THREE.Vector3[]=[],lunarMarks:THREE.Vector3[]=[];
   shortSigns.forEach((name,i)=>{
-   const angle=i*30,points=[new THREE.Vector3(...worldPosition(angle,45.7)),new THREE.Vector3(...worldPosition(angle,48.3))];dial.add(new THREE.Line(geometry(new THREE.BufferGeometry().setFromPoints(points)),material(new THREE.LineBasicMaterial({color:0xb6a580,transparent:true,opacity:.55}))));
+   const angle=i*30;
+   signMarks.push(new THREE.Vector3(...worldPosition(angle,45.7)),new THREE.Vector3(...worldPosition(angle,48.3)));
    const label=new THREE.Sprite(material(new THREE.SpriteMaterial({map:textTexture(name),transparent:true,depthWrite:false,opacity:.75})));label.position.set(...worldPosition(angle+15,51));label.scale.set(8,1.5,1);dial.add(label);
   });
-  for(let i=0;i<27;i++){const points=[new THREE.Vector3(...worldPosition(i*360/27,43)),new THREE.Vector3(...worldPosition(i*360/27,44))];dial.add(new THREE.Line(geometry(new THREE.BufferGeometry().setFromPoints(points)),material(new THREE.LineBasicMaterial({color:0x7d9bbf,transparent:true,opacity:.3}))));}
+  for(let i=0;i<27;i++)lunarMarks.push(new THREE.Vector3(...worldPosition(i*360/27,43)),new THREE.Vector3(...worldPosition(i*360/27,44)));
+  dial.add(new THREE.LineSegments(geometry(new THREE.BufferGeometry().setFromPoints(signMarks)),material(new THREE.LineBasicMaterial({color:0xb6a580,transparent:true,opacity:.55}))));
+  dial.add(new THREE.LineSegments(geometry(new THREE.BufferGeometry().setFromPoints(lunarMarks)),material(new THREE.LineBasicMaterial({color:0x7d9bbf,transparent:true,opacity:.3}))));
   const highlights=new THREE.Group();scene.add(highlights);
   const coordinateMarker=new THREE.Mesh(geometry(new THREE.SphereGeometry(.26,16,12)),material(new THREE.MeshBasicMaterial({color:0xf3d59c})));highlights.add(coordinateMarker);coordinateMarker.visible=false;
   const selectedArcMaterial=material(new THREE.MeshBasicMaterial({color:0xd9b879,transparent:true,opacity:.24,side:THREE.DoubleSide,depthWrite:false}));
@@ -140,7 +156,7 @@ export default function SpaceScene(props:Props){
   const currentLook=new THREE.Vector3(),startLook=new THREE.Vector3(),endLook=new THREE.Vector3(),startCamera=new THREE.Vector3(),endCamera=new THREE.Vector3();
   let travelStart=performance.now(),travelDuration=0,traveling=false;
   const curve=new THREE.CubicBezierCurve3(new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3());
-  function request(){if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(render)}
+  function request(){if(!disposed&&inView&&!document.hidden&&!frame)frame=requestAnimationFrame(render)}
   function upgrade(key:string){const start=upgrades.get(key);if(!start)return;upgrades.delete(key);start()}
   function framing(){const w=el!.clientWidth,h=el!.clientHeight;if(!w||!h)return;camera.clearViewOffset();if(focused!=='overview'){if(w>760)camera.setViewOffset(w,h,w*.13,0,w,h);else camera.setViewOffset(w,h,0,h*.16,w,h)}camera.updateProjectionMatrix()}
   function move(key:Destination,intro:boolean){
@@ -151,12 +167,19 @@ export default function SpaceScene(props:Props){
    sector=isSector;activeKey=info.key;
    const target=key==='overview'?zero:actor?.group.position??zero;
    keyLight.position.copy(target).add(focusDirection.set(-11,6,11));keyLight.target.position.copy(target);
+   if((key==='sun'||key==='overview')&&!solar){
+    solar=solarEffects(bodies.sun.radius);
+    actors.get('sun')?.group.add(solar.group);
+   }
    if(key==='overview'){
     for(const name of ['earth','sun','mercury','venus','mars','jupiter','saturn','moon'])upgrade(name);
     if(!mobile)void panorama.then(()=>disposed?null:map('sky-4k.webp')).then(texture=>{if(!texture||disposed)return;skyMaterial.map=texture;request()});
-   }else if(!intro){upgrade(isSector?'moon':key);if(isSector)upgrade('earth')}
+   }else{upgrade(isSector?'moon':key);if(isSector)upgrade('earth')}
    dial.visible=key==='overview'||sector;earth.visible=dial.visible;
-   actors.forEach((item,name)=>{item.group.visible=key==='overview'||(sector?name==='moon':name===activeKey)});
+   actors.forEach((item,name)=>{
+    item.group.visible=key==='overview'||(sector?name==='moon':name===activeKey);
+    if(bodies[name])item.mesh.geometry=key==='overview'||sector?overviewSphere:focusSphere;
+   });
    coordinateMarker.visible=isSector;
    if(isSector)coordinateMarker.position.set(...worldPosition(key==='lagna'?props.chart.lagna??0:info.placement.longitude,47));
    if(key==='overview'){
@@ -180,6 +203,8 @@ export default function SpaceScene(props:Props){
   }
   controller.current={move,request};
   const resize=()=>{const w=el!.clientWidth,h=el!.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;framing();request()};resize();const ro=new ResizeObserver(resize);ro.observe(el);
+  const observer=new IntersectionObserver(([entry])=>{inView=entry.isIntersecting;if(inView)request()});
+  observer.observe(el);
   let readyTimer:number|undefined;
   const ready=()=>{if(disposed||loaded)return;clearTimeout(readyTimer);loaded=true;move(live.current.destination,live.current.intro);live.current.onReady()};
   live.current.onProgress(30);
@@ -192,21 +217,25 @@ export default function SpaceScene(props:Props){
   controls.addEventListener('change',request);
   document.addEventListener('visibilitychange',request);
   let last=0,solarTime=0;
-  const projected=new THREE.Vector3(),direction=new THREE.Vector3(),cameraDirection=new THREE.Vector3();
+  const projected=new THREE.Vector3(),direction=new THREE.Vector3(),cameraDirection=new THREE.Vector3(),travelPoint=new THREE.Vector3();
   function render(now:number){
    frame=0;
-   if(disposed||document.hidden)return;
-   const animated=!live.current.paused&&!live.current.reducedMotion;
+   if(disposed||!inView||document.hidden)return;
+   const animated=Boolean(bodies[focused])&&!live.current.paused&&!live.current.reducedMotion;
    if(mobile&&(animated||traveling)&&now-last<27){request();return}
    const dt=Math.min((now-last)/1000,.05);last=now;
-   if(traveling){const t=Math.min(1,(now-travelStart)/Math.max(1,travelDuration)),ease=t*t*t*(t*(t*6-15)+10);camera.position.copy(curve.getPoint(ease));currentLook.lerpVectors(startLook,endLook,ease);controls.target.copy(currentLook);camera.lookAt(currentLook);if(t===1){traveling=false;controls.enabled=true;controls.update()}}
+   if(traveling){const t=Math.min(1,(now-travelStart)/Math.max(1,travelDuration)),ease=t*t*t*(t*(t*6-15)+10);curve.getPoint(ease,travelPoint);camera.position.copy(travelPoint);currentLook.lerpVectors(startLook,endLook,ease);controls.target.copy(currentLook);camera.lookAt(currentLook);if(t===1){traveling=false;controls.enabled=true;controls.update()}}
    else controls.update();
+   if(!traveling&&focused==='moon'&&!hasMoonCloseup&&moonSurface&&detailedMoon&&!mobile&&renderer.capabilities.maxTextureSize>=4096&&camera.position.distanceToSquared(controls.target)<31){
+    hasMoonCloseup=true;
+    const surface=moonSurface;
+    void detailedMoon.then(()=>{if(!disposed)return applyMap('moon-4k.webp',surface)});
+   }
    if(animated&&loaded){
     actors.forEach((actor,key)=>{if(actor.group.visible&&bodies[key])actor.mesh.rotation.y+=dt*(key==='moon'?.018:.035)});
-    if(earth.visible)earth.rotation.y+=dt*.025;
     if(focused==='sun')solarTime+=dt;
    }
-   solar.tick(solarTime,focused==='sun');
+   solar?.tick(solarTime,focused==='sun');
    camera.getWorldDirection(cameraDirection);
    const {clientWidth:width,clientHeight:height}=el!;
    actors.forEach((actor,key)=>{
@@ -216,17 +245,20 @@ export default function SpaceScene(props:Props){
     projected.copy(actor.group.position);projected.y+=actor.radius*1.4;
     direction.copy(projected).sub(camera.position);projected.project(camera);
     label.hidden=direction.dot(cameraDirection)<=0||Math.abs(projected.x)>1||Math.abs(projected.y)>1;
-    if(!label.hidden)label.style.transform=`translate(${(projected.x*.5+.5)*width}px,${(-projected.y*.5+.5)*height}px) translate(-50%,-100%)`;
+    if(!label.hidden){
+     const transform=`translate(${(projected.x*.5+.5)*width}px,${(-projected.y*.5+.5)*height}px) translate(-50%,-100%)`;
+     if(label.style.transform!==transform)label.style.transform=transform;
+    }
    });
    renderer.render(scene,camera);
    if(traveling||(loaded&&animated))request();
   }
   request();
   return()=>{
-   disposed=true;clearTimeout(readyTimer);cancelAnimationFrame(frame);controller.current=null;ro.disconnect();
+   disposed=true;clearTimeout(readyTimer);cancelAnimationFrame(frame);controller.current=null;ro.disconnect();observer.disconnect();
    document.removeEventListener('visibilitychange',request);controls.removeEventListener('change',request);controls.dispose();
    renderer.domElement.removeEventListener('pointerdown',down);renderer.domElement.removeEventListener('pointerup',up);renderer.domElement.removeEventListener('webglcontextlost',lost);
-   highlight?.geometry.dispose();solar.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
+   highlight?.geometry.dispose();solar?.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
    renderer.dispose();renderer.domElement.remove();labelHost.replaceChildren();
   };
  },[props.chart]);

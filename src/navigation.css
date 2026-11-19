@@ -1,0 +1,31 @@
+.atlas-page { min-height: 64vh; }
+.atlas-page [hidden] { display: none !important; }
+.atlas-nav a[aria-current="page"] { color: #e3c891; }
+.atlas-nav nav a, .atlas-nav .nav-cta { font-size: .875rem; }
+.atlas-page.page-birth-details { padding: clamp(24px, 5vw, 72px) 0; }
+.atlas-page .form-intro h1 { font: 500 clamp(2.4rem, 5vw, 4.4rem)/1.02 var(--serif); margin: 0; }
+.atlas-page .form-intro > p { font-size: 1rem; line-height: 1.6; }
+.atlas-page .form-intro .source, .guide-actions .source { font-size: .875rem; }
+.atlas-page .results { padding-top: clamp(30px, 6vw, 80px); }
+.atlas-page .chat-section { padding-top: clamp(32px, 6vw, 80px); }
+.atlas-page .chat-section .form-help, .atlas-page .chat-mode { font: .875rem/1.55 var(--sans); color: #b7c2d5; }
+.atlas-page .chat-section .section-copy { font-size: 1rem; }
+.atlas-empty, .beginner-guide { padding: clamp(32px,5vw,72px) 0; }
+.atlas-empty h1, .beginner-guide h1 { font: 500 clamp(2.65rem,6.5vw,5.1rem)/1.04 var(--serif); margin: 0 0 1.25rem; }
+.atlas-empty p, .guide-intro, .guide-steps, .guide-concepts dd { color: #b7c2d5; font: 1rem/1.65 var(--sans); }
+.guide-intro, .guide-steps { max-width: 70ch; }
+.beginner-guide h2 { font-size: clamp(1.75rem,4vw,2.65rem); margin-top: 2.5rem; }
+.guide-steps { padding-inline-start: 1.25rem; }
+.guide-steps li + li { margin-top: .55rem; }
+.guide-concepts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: clamp(20px,5vw,70px); }
+.guide-concepts > div { border-top: 1px solid var(--line); padding: 1.25rem 0; }
+.guide-concepts dt { color: #e3c891; font: 500 1.45rem var(--serif); }
+.guide-concepts dd { margin: .5rem 0 0; }
+.guide-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem 1.5rem; }
+@media (max-width: 760px) {
+  .atlas-nav { display: grid; grid-template-columns: 1fr auto; height: auto; padding-block: 15px 8px; gap: 10px; }
+  .atlas-nav nav { grid-row: 2; grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
+  .atlas-nav .nav-cta { grid-row: 1; grid-column: 2; }
+  .atlas-nav nav a { padding: .4rem 0; }
+  .guide-concepts { grid-template-columns: 1fr; }
+}

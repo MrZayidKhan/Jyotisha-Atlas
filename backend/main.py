@@ -61,7 +61,7 @@ def chart(birth: Birth):
 @app.post('/api/chat')
 def chat(request: ChatRequest):
     api_key = os.getenv('GEMINI_API_KEY', '').strip()
-    model = os.getenv('GEMINI_MODEL', '').strip() or 'gemini-2.5-flash-lite'
+    model = os.getenv('GEMINI_MODEL', '').strip() or 'gemini-3.5-flash-lite'
     if not api_key:
         raise HTTPException(503, 'AI is not configured. Use the local source guide.')
     if any(word in request.question.lower() for word in ('death', 'disease', 'illness', 'invest', 'stock', 'guarantee', 'when will', 'marry')):

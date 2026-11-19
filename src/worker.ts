@@ -62,7 +62,7 @@ export default {
    const history=Array.isArray(data.history)?data.history.slice(-6).flatMap(message=>
     message&&message.role==='user'&&typeof message.text==='string'?[message.text.slice(0,600)]:[]):[];
    try{
-    const model=env.GEMINI_MODEL?.trim()||'gemini-2.5-flash-lite';
+    const model=env.GEMINI_MODEL?.trim()||'gemini-3.5-flash-lite';
     const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
      method:'POST',
      headers:{'x-goog-api-key':env.GEMINI_API_KEY!.trim(),'Content-Type':'application/json'},
