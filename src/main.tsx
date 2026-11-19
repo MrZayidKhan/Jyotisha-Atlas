@@ -42,29 +42,46 @@ function Chat({ chart }: {
     }[]>([]);
     const [question, setQuestion] = useState('');
     const [busy, setBusy] = useState(false);
-    const [online, setOnline] = useState(false);
-    const [aiEnabled, setAiEnabled] = useState(false);
-    useEffect(() => { fetch('/api/health').then(r => r.ok ? r.json() : null).then(d => setAiEnabled(!!d?.llm_configured)).catch(() => { }); }, []);
-    async function ask(text: string) { if (!text.trim() || busy)
-        return; const history = [...messages, { role: 'user', text }]; setMessages(history); setQuestion(''); setBusy(true); let response = advancedAnswer(text, chart) ?? groundedAnswer(text, chart); if (/\bit\b|that planet|tell me more|what about/.test(text.toLowerCase())) {
-        const prior = [...messages].reverse().find(m => m.role === 'user');
-        if (prior)
-            response = advancedAnswer(`${prior.text} ${text}`, chart) ?? groundedAnswer(`${prior.text} ${text}`, chart);
-    } if (online && chart) {
+    async function ask(text: string) {
+        if (!text.trim() || busy) return;
+        const history = [...messages, { role: 'user', text }];
+        setMessages(history);
+        setQuestion('');
+        setBusy(true);
+        const query = text.trim().toLowerCase().replace(/[?.!]+$/, '');
+        const lookup = /^where is (?:my )?([a-z]+)$/.exec(query)?.[1];
+        const placement = chart?.placements.find(p => lookup === p.key || lookup === p.name.toLowerCase());
+        const prepared = placement ? groundedAnswer(placement.key, chart)
+            : /^(?:what is )?(?:my )?current (?:dasha|mahadasha|antardasha)$/.test(query)
+                ? advancedAnswer(query, chart) : null;
+        const fallback = 'That question is beyond the part of the sky I can read right now. Try asking about a specific planet, house, or dasha.';
+        let response = prepared ?? fallback;
         try {
-            const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ birth: { ...chart.birth, name: '', place: 'Birth location' }, question: text, history: messages.slice(-8) }) });
-            if (!r.ok)
-                throw Error();
-            const d = await r.json();
-            if(typeof d.answer!=='string') throw Error();
-            response = d.answer;
-            if(d.mode==='source-guide') response += '\n\nAnswered by the built-in chart guide.';
+            if (!prepared && chart) {
+                const r = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ birth: { ...chart.birth, name: '', place: 'Birth location' }, question: text, history: messages.slice(-8) }),
+                });
+                if (!r.ok) throw Error('Chat unavailable');
+                const result = await r.json();
+                if (typeof result.answer === 'string' && !/^The available source collection/.test(result.answer)) {
+                    response = result.mode === 'source-guide'
+                        ? `The signal from Gemini faded. Here’s what the chart guide can tell you.\n\n${result.answer}`
+                        : result.answer;
+                }
+            }
+        } catch {
+            const local = advancedAnswer(text, chart) ?? groundedAnswer(text, chart);
+            if (!/^The available source collection/.test(local)) {
+                response = `The signal from Gemini faded. Here’s what the chart guide can tell you.\n\n${local}`;
+            }
+        } finally {
+            setMessages([...history, { role: 'assistant', text: response }]);
+            setBusy(false);
         }
-        catch {
-            response += '\n\nThe AI connection is unavailable; this answer comes from the local source guide.';
-        }
-    } setMessages([...history, { role: 'assistant', text: response }]); setBusy(false); }
-    return <section id="ask" className="chat-section wrap"><div><p className="eyebrow">Ask the atlas</p><h2>Stay curious.</h2><p className="section-copy">Follow a placement. Unpack a word. Ask what the sources can—and cannot—tell you.</p><div className="chat-mode">{aiEnabled ? <label><input type="checkbox" checked={online} onChange={e => setOnline(e.target.checked)}/> Ask Gemini about my chart</label> : 'Chart guide · local answers'}</div><p className="form-help">{online ? 'Your question, recent chat, and calculated chart facts go to Gemini. Atlas sends birth time and coordinates to its own server to recalculate the chart.' : 'Ask about your current dasha, detected yogas, Jaimini indicators, or individual placements.'}</p></div><div className="chat-panel"><div className="chat-log" role="log" aria-live="polite">{messages.length === 0 ? <div className="chat-welcome"><span>J / A</span><h3>What would you like to understand?</h3><p>Try a question to begin.</p><div className="chips">{['Summarize my chart', 'Explain my rising sign', 'What is my current dasha?'].map(q => <button onClick={() => ask(q)} key={q}>{q} ↗</button>)}</div></div> : messages.map((m, i) => <div className={`message ${m.role}`} key={i}><span>{m.role === 'user' ? 'YOU' : 'ATLAS'}</span><p>{m.text}</p></div>)}{busy && <p className="form-help">Finding a supported answer…</p>}</div><form className="chat-input" onSubmit={e => { e.preventDefault(); ask(question); }}><input aria-label="Question about your chart" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about your chart…" maxLength={600} required/><button disabled={busy} aria-label="Send question">↗</button></form></div></section>;
+    }
+    return <section id="ask" className="chat-section wrap"><div><p className="eyebrow">Ask the atlas</p><h2>Stay curious.</h2><p className="section-copy">Follow a placement. Unpack a word. Ask what the sources can—and cannot—tell you.</p><p className="form-help">For questions that need AI, Atlas shares your question, recent chat, and calculated chart facts with Gemini.</p></div><div className="chat-panel"><div className="chat-log" role="log" aria-live="polite">{messages.length === 0 ? <div className="chat-welcome"><span>J / A</span><h3>What would you like to understand?</h3><p>Try a question to begin.</p><div className="chips">{['Summarize my chart', 'Explain my rising sign', 'What is my current dasha?'].map(q => <button onClick={() => ask(q)} key={q}>{q} ↗</button>)}</div></div> : messages.map((m, i) => <div className={`message ${m.role}`} key={i}><span>{m.role === 'user' ? 'YOU' : 'ATLAS'}</span><p>{m.text}</p></div>)}{busy && <p className="form-help">Reading the sky and tracing your chart…</p>}</div><form className="chat-input" onSubmit={e => { e.preventDefault(); ask(question); }}><input aria-label="Question about your chart" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about your chart…" maxLength={600} required/><button disabled={busy} aria-label="Send question">↗</button></form></div></section>;
 }
 function Results({ chart, replay, openHorizon }: {
     chart: Chart;
