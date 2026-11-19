@@ -1,6 +1,24 @@
 # Jyotisha Atlas
 
-[Complete user, glossary, and developer guide](public/GUIDE.md).
+Jyotisha Atlas is a browser-based Vedic astrology learning tool. Create a birth chart, explore an interactive 3D observatory or birthplace horizon, and see how traditional interpretations relate to calculated placements.
+
+[Live site](https://jyotisha-atlas.docilelamp1025.chatgpt.site) · [User and developer guide](public/GUIDE.md) · [Image and data credits](public/ATTRIBUTION.md)
+
+## Start here
+
+1. Open **Create Chart** and enter the birth date, time, and place. You can also use the sample chart or enter coordinates manually.
+2. Open **My Chart** for the chart, placements, readings, and period timeline. The observatory and horizon are optional.
+3. Use **Beginner Guide** to look up terms. **Ask Atlas** offers the built-in guide and, on the hosted site, optional Gemini analysis.
+
+## Hosting
+
+| Environment | What runs there |
+| --- | --- |
+| OpenAI Sites | The frontend and the server-side Worker for Gemini analysis. |
+| Local Vite | The frontend, calculations, and built-in guide. Start FastAPI separately for optional local AI. |
+| GitHub Pages | The static frontend can be hosted once asset URLs support the repository subpath. The Worker and FastAPI require a separate host. |
+
+For a GitHub Pages project site, configure Vite's base for the repository path and make runtime asset URLs use that base. Upload only `dist/client` through a Pages deployment. Chart calculations and the built-in guide run in the browser. Full Gemini chat requires a separate authenticated API that keeps `GEMINI_API_KEY` server-side. [GitHub Pages documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 
 ## Hosted chart and observatory
 
@@ -59,9 +77,9 @@ Expect `Uvicorn running on http://127.0.0.1:8000`. Vite proxies `/api/*` to Fast
 
 For Gemini retrieval, create `.env` beside package.json using `.env.example`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY`. The optional `GEMINI_MODEL` defaults to `gemini-3.5-flash-lite`. Keep the key server-side. Restart FastAPI and reload the frontend. Chat offers the AI toggle when `/api/health` reports `llm_configured: true`.
 
-AI receives the question, recent messages and server-generated answer cards. It may select only an allowed card ID; the server supplies the text. It cannot generate positions, rules or source references. This supports constrained follow-ups, not unrestricted astrology answers. Unsupported questions receive an explicit source-limited response. Local retrieval remains available if the provider fails.
+The optional local FastAPI backend uses Gemini to select a predefined answer card. For the conversational analysis described below, use the hosted site.
 
-Sites hosting uses a Worker with `/api/health` and `/api/chat`. Set `GEMINI_API_KEY` in Sites runtime secrets to enable the optional connected AI toggle. Set `GEMINI_MODEL` only to override the default. In connected mode, the Worker sends derived chart cards and user questions to Gemini. Gemini selects a card. If the key is absent or Gemini fails, the Worker returns the built-in guide response.
+Sites hosting uses a Worker with `/api/health` and `/api/chat`. Set `GEMINI_API_KEY` in Sites runtime secrets to enable connected AI. Set `GEMINI_MODEL` only to override the default. In connected mode, the Worker recalculates the chart and sends derived chart evidence, the latest question, and recent messages to Gemini. Gemini writes a plain-English response. If the key is absent or Gemini fails, the Worker returns the built-in guide response.
 
 ## Components and data flow
 
