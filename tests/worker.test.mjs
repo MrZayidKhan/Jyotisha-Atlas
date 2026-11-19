@@ -28,21 +28,22 @@ test('signed-in chat recalculates facts and falls back without credentials',asyn
  assert.equal((await worker.fetch(ask({...data,birth:{...data.birth,date:'2000-02-30'}},auth),env)).status,422);
 });
 
-test('connected chat uses provider-selected evidence without sending birth identifiers',async t=>{
+test('connected chat analyzes a broad question and includes prior answers without birth identifiers',async t=>{
  const fake=t.mock.method(globalThis,'fetch',async (url,request)=>{
   assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
   assert.equal(request.headers['x-goog-api-key'],'test');
   const input=JSON.parse(request.body);
-  assert.equal(input.generationConfig.responseMimeType,'application/json');
   const content=input.contents[0].parts[0].text;
   assert.doesNotMatch(content,/Private Name|Private Place/);
-  const cards=JSON.parse(content).cards;
+  const {cards,history,question}=JSON.parse(content);
+  assert.equal(question,'Explain my chart in plain English');
+  assert.equal(history[1].text,'Earlier explanation');
   assert.ok(cards.some(card=>card.topic==='Jupiter'||card.topic==='Guru'));
-  return Response.json({candidates:[{content:{parts:[{text:'{"index":0}'}]}}]});
+  return Response.json({candidates:[{content:{parts:[{text:'Your chart brings together several themes.'}]}}]});
  });
- const request=ask({...data,birth:{...data.birth,name:'Private Name',place:'Private Place'}},auth);
+ const request=ask({...data,question:'Explain my chart in plain English',history:[{role:'user',text:'What stands out?'},{role:'assistant',text:'Earlier explanation'}],birth:{...data.birth,name:'Private Name',place:'Private Place'}},auth);
  const result=await (await worker.fetch(request,{...env,GEMINI_API_KEY:'test'})).json();
  assert.equal(fake.mock.callCount(),1);
- assert.equal(result.mode,'ai-retrieval');
- assert.match(result.answer,/Mahadasha/);
+ assert.equal(result.mode,'ai-analysis');
+ assert.equal(result.answer,'Your chart brings together several themes.');
 });
