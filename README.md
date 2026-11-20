@@ -16,9 +16,9 @@ Jyotisha Atlas is a browser-based Vedic astrology learning tool. Create a birth 
 | --- | --- |
 | OpenAI Sites | The frontend and the server-side Worker for Gemini analysis. |
 | Local Vite | The frontend, calculations, and built-in guide. Start FastAPI separately for optional local AI. |
-| GitHub Pages | The static frontend can be hosted once asset URLs support the repository subpath. The Worker and FastAPI require a separate host. |
+| GitHub Pages | [Public frontend](https://mrzayidkhan.github.io/Jyotisha-Atlas/) with charts, 3D views, the beginner guide, and built-in answers. |
 
-For a GitHub Pages project site, configure Vite's base for the repository path and make runtime asset URLs use that base. Upload only `dist/client` through a Pages deployment. Chart calculations and the built-in guide run in the browser. Full Gemini chat requires a separate authenticated API that keeps `GEMINI_API_KEY` server-side. [GitHub Pages documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
+GitHub Actions builds the frontend with the repository base path and publishes `dist/client`. The FastAPI backend, Gemini key, and `.openai` configuration are excluded from the published source tree and Pages build.
 
 ## Hosted chart and observatory
 
@@ -53,7 +53,7 @@ React/TypeScript educational observatory: enter birth details, watch a cinematic
 
 ## Run
 
-Requires Node **24+**, Python **3.11+** (tested with 3.14).
+Requires Node **24+**. Python is only needed for the separate local API.
 
 ```powershell
 cd D:\IKS
@@ -64,6 +64,8 @@ npm.cmd run dev
 Open http://127.0.0.1:5173 . Choose **Explore a sample sky** for a labeled Greenwich sample, or enter a birth date/time and select a city from the dropdown. Coordinates and the birth-date time-zone offset are filled automatically. After arrival, the 3D observatory **stays open**. Select Chandra, another graha, Moon Rashi, Nakshatra or Lagna inside the scene to travel to that factor and read its explanation. Drag to orbit, scroll/pinch to zoom, pause rotation or return to the overview. **Chart & report** or Escape returns to the report. Inputs stay in memory; refresh clears them.
 
 ## Optional backend and AI
+
+The backend is maintained separately from this GitHub checkout. On the maintainer's Windows machine, double-click `D:\IKS\server-run.cmd` to start FastAPI. Press Ctrl+C in its terminal to stop it.
 
 In a second PowerShell terminal:
 
@@ -89,8 +91,8 @@ Sites hosting uses a Worker with `/api/health` and `/api/chat`. Set `GEMINI_API_
 - `src/observatoryModel.ts`: maps calculated chart factors to camera destinations and source-limited explanations.
 - `src/engine.ts`: deterministic positions, approximate sidereal conversion, ascendant, Bhavas and Nakshatra; independent of AI.
 - `src/knowledge.ts`: separate glossary, source references, factor-grouping rules and retrieval.
-- `backend/main.py`: FastAPI calculation, health and optional AI endpoints.
-- `scripts/bridge.mjs`: invokes the same TypeScript engine through Node from Python. `POST /api/chart` accepts birth details; `POST /api/chat` recalculates from birth inputs before retrieving answers.
+- The maintainer’s local FastAPI backend provides calculation, health, and optional AI endpoints.
+- The local API calls the same TypeScript chart engine through Node.
 - `public/assets`: existing NASA thumbnails. `public/textures`: Solar System Scope surface maps (CC BY 4.0), including a 4K desktop Moon and 2K mobile Moon. The Milky Way panorama uses 4K desktop / 2K mobile maps. Source credits and transformation notes are in `public/ATTRIBUTION.md`.
 - `public/base.css`, `src/style.css`, `src/refinements.css`: responsive visual treatment. Motion handles UI transitions. No paid animation libraries or generated images.
 
@@ -114,10 +116,10 @@ Choose **Save report / PDF** after creating a chart, then choose your browser's 
 npm.cmd run build
 node --experimental-strip-types --test tests/engine.test.mjs
 node --experimental-strip-types --test tests/observatory.test.mjs
-python -m unittest discover -s tests -p '*_test.py' -v
+node --import tsx --test tests/jyotisha.test.mjs tests/locations.test.mjs tests/birth-form.test.tsx
 ```
 
-Vite builds `dist/client` and copies `public/` assets. The build also bundles the Sites Worker into `dist/server`. Run `node --experimental-strip-types --test tests/jyotisha.test.mjs tests/worker.test.mjs` after building. Build/type checks passed. Six engine checks cover UTC equivalence, independently transformed eastern-horizon Lagna, equinox Sun longitude, unknown time, coordinate/node invariants and unsupported questions. Four observatory checks verify graha-to-destination mapping, Moon-sector destinations, unknown-time Lagna exclusion and world-space longitude geometry. Earlier API tests cover chart generation, validation, health and unknown time. The new Moon model and persistent explanation panel were visually verified in Chrome. Further browser interaction testing was stopped by physical Escape; all planet transitions, mobile framing and reduced-motion behavior are not yet fully visually verified. PDF pagination and live LLM responses also need broader testing.
+Vite builds `dist/client` and copies the static assets from `public/`. The frontend tests cover chart calculations, observatory destinations, interpretation rules, city lookup, and birth form interactions.
 
 ## Stages delivered
 
