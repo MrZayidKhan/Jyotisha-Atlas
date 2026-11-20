@@ -1,3 +1,4 @@
+import { assetUrl } from './assetUrl';
 export default function HomeHero({preview}:{preview:()=>void}){
  return <section className="home-hero wrap">
   <div className="home-hero-copy">
@@ -10,8 +11,8 @@ export default function HomeHero({preview}:{preview:()=>void}){
   </div>
   <figure className="home-moon-scene">
    <div className="home-moon-halo"/>
-   <img src="/assets/moon-nearside-960.webp"
-    srcSet="/assets/moon-nearside-480.webp 480w, /assets/moon-nearside-960.webp 960w, /assets/moon-nearside-1600.webp 1600w"
+   <img src={assetUrl('assets/moon-nearside-960.webp')}
+    srcSet={[assetUrl('assets/moon-nearside-480.webp') + ' 480w', assetUrl('assets/moon-nearside-960.webp') + ' 960w', assetUrl('assets/moon-nearside-1600.webp') + ' 1600w'].join(', ')}
     sizes="(max-width: 760px) 330px, 470px"
     alt="The lunar near side, photographed by NASA’s Lunar Reconnaissance Orbiter"
     width="1600" height="1554" fetchPriority="high"/>

@@ -1,3 +1,4 @@
+import { assetUrl } from './assetUrl';
 import {useEffect,useRef} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
@@ -33,7 +34,7 @@ export default function SpaceScene(props:Props){
   let solar:ReturnType<typeof solarEffects>|undefined;
   function map(file:string,colorSpace:string=THREE.SRGBColorSpace){
    const cached=loads.get(file);if(cached)return cached;
-   const loading=loader.loadAsync(`/textures/${file}`).then(texture=>{
+   const loading=loader.loadAsync(assetUrl(`textures/${file}`)).then(texture=>{
     if(disposed){texture.dispose();return null}
     texture.colorSpace=colorSpace;texture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());textures.push(texture);
     return texture;

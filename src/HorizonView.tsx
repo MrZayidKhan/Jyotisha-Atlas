@@ -1,3 +1,4 @@
+import { assetUrl } from './assetUrl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Chart } from './engine';
 import { birthHorizon, type CatalogStar } from './horizon';
@@ -6,7 +7,7 @@ import './results-views.css';
 const radians=Math.PI/180;
 let catalogRequest:Promise<CatalogStar[]|undefined>|undefined;
 function loadCatalog(){
- return catalogRequest??=fetch('/hyg-stars.json')
+ return catalogRequest??=fetch(assetUrl('hyg-stars.json'))
   .then(response=>response.ok?response.json():null)
   .then(data=>Array.isArray(data)&&data.length?data:undefined)
   .catch(()=>{catalogRequest=undefined;return undefined});

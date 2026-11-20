@@ -1,3 +1,4 @@
+import { assetUrl } from './assetUrl';
 import KnowledgeLibrary from './KnowledgeLibrary';
 
 const concepts = [
@@ -25,7 +26,7 @@ export default function BeginnerGuide() {
                 {concepts.map(({title,text})=><div key={title}><dt>{title}</dt><dd>{text}</dd></div>)}
             </dl>
             <p className="guide-intro">If your birth time is unknown, Atlas uses local noon as a reference and shows the range across the day. Read those placements with care near sign and nakshatra boundaries.</p>
-            <div className="guide-actions"><a className="button" href="#birth-details">Create chart</a><a className="source" href="/GUIDE.md">Read the technical guide</a></div>
+            <div className="guide-actions"><a className="button" href="#birth-details">Create chart</a><a className="source" href={assetUrl('GUIDE.md')}>Read the technical guide</a></div>
         </section>
         <KnowledgeLibrary/>
     </>;

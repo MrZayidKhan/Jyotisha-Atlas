@@ -11,3 +11,12 @@ __pycache__/
 outputs/
 *.tar.gz
 preview.png
+/.openai/
+/backend/
+/requirements.txt
+/scripts/bridge.mjs
+/scripts/build-worker.mjs
+/src/worker.ts
+/tests/backend_test.py
+/tests/worker.test.mjs
+/server-run.cmd
