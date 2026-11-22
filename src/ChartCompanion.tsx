@@ -1,25 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Chart } from './engine';
+import { chartHelp, guideTopics } from './chartHelp';
+import { personalReading, yogaCandidates } from './jyotisha';
 import './chart-companion.css';
-
-const topics = {
-  overview: ['Chart overview', 'The rising sign shows the chart’s starting point. The Moon’s lunar mansion describes a traditional emotional theme. A pada is one of four parts of that mansion.'],
-  wheel: ['Chart wheel', 'Each slice is a sign. The markers show where the planets and lunar nodes were calculated at your birth. Select a marker to inspect its placement.'],
-  placements: ['Planet placements', 'Each row shows a planet or lunar node, which sign it occupies, and how far it has traveled through that sign. A house connects the placement to a traditional area of life.'],
-  reading: ['Chart interpretation', 'This section connects several placements into traditional themes like personality, work, and relationships. Open the evidence under a theme to see which placements it uses.'],
-  timing: ['Dasha timeline', 'A dasha is a traditional timing period associated with a planet. A major period contains shorter subperiods. The timeline shows when each period starts and ends.'],
-} as const;
-type Topic = keyof typeof topics;
 
 export default function ChartCompanion({ chart }: { chart: Chart }) {
   const [active, setActive] = useState(false);
-  const [topic, setTopic] = useState<Topic>();
+  const [topic, setTopic] = useState('');
   const [answer, setAnswer] = useState('');
   const [busy, setBusy] = useState(false);
   const star = useRef<HTMLSpanElement>(null);
   const widget = useRef<HTMLElement>(null);
   const request = useRef<AbortController | null>(null);
-  const availableTopics = (Object.keys(topics) as Topic[]).filter(key => !chart.uncertain || (key !== 'reading' && key !== 'timing'));
+  const availableTopics = [
+    ...guideTopics.filter(key => !chart.uncertain || !['parashari','yogas','jaimini','timing'].includes(key)),
+    ...chart.placements.map(p => `planet:${p.key}`),
+    ...personalReading(chart).map((_, index) => `theme:${index}`),
+    ...yogaCandidates(chart).map((_, index) => `yoga:${index}`),
+  ];
 
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => {
@@ -39,12 +37,14 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     };
   }, [active]);
 
-  async function explain(key: Topic) {
+  async function explain(key: string) {
+    const detail = chartHelp(chart, key);
+    if (!detail) return;
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
     setTopic(key);
-    setAnswer(topics[key][1]);
+    setAnswer(detail.text);
     setBusy(false);
     if (!import.meta.env.DEV) return;
     setBusy(true);
@@ -69,15 +69,21 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     const root = widget.current?.closest('.results');
     if (!active || !root) return;
     function select(event: Event) {
-      if (!(event.target instanceof Element) || event.target.closest('a, button, input, label, select, summary, [role="button"]')) return;
-      const key = event.target.closest<HTMLElement>('[data-chart-help]')?.dataset.chartHelp;
-      if (key && Object.hasOwn(topics, key)) void explain(key as Topic);
+      if (!(event.target instanceof Element) || event.target.closest('a, input, select, label')) return;
+      if (event instanceof KeyboardEvent && (!['Enter', ' '].includes(event.key) || !event.target.matches('[role="button"]'))) return;
+      const target = event.target.closest('[data-chart-help]');
+      const control = event.target.closest('button, summary, [role="button"]');
+      if (control && target !== control) return;
+      const key = target?.getAttribute('data-chart-help');
+      if (key) void explain(key);
     }
     root.classList.add('chart-help-active');
     root.addEventListener('click', select);
+    root.addEventListener('keydown', select);
     return () => {
       root.classList.remove('chart-help-active');
       root.removeEventListener('click', select);
+      root.removeEventListener('keydown', select);
     };
   }, [active, chart]);
 
@@ -85,13 +91,16 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     {active && <span ref={star} className="chart-companion-follower" aria-hidden="true"><Star /></span>}
     <div className="chart-companion-bubble">
       {active ? <>
-        <strong>{topic ? topics[topic][0] : 'Pick a glowing section'}</strong>
-        <p aria-live="polite">{answer || 'I’ll explain what it means in a few sentences.'}</p>
+        <strong>{topic ? chartHelp(chart, topic)?.title : 'Pick a glowing detail'}</strong>
+        <p aria-live="polite">{answer || 'Try Sidereal, a dot on the wheel, or a specific reading card. I’ll explain what you’re seeing and how Atlas got there.'}</p>
         {busy && <small role="status">Reading your chart…</small>}
         {import.meta.env.DEV && !topic && <small>AI explanations use calculated chart details.</small>}
-        <div className="chart-companion-topics">{availableTopics.map(key =>
-          <button key={key} type="button" aria-pressed={topic === key} onClick={() => void explain(key)}>{topics[key][0]}</button>
-        )}</div>
+        <label className="chart-companion-picker">Explain another detail
+          <select value={availableTopics.includes(topic) ? topic : ''} onChange={event => void explain(event.target.value)}>
+            <option value="" disabled>Choose a chart detail</option>
+            {availableTopics.map(key => <option key={key} value={key}>{chartHelp(chart, key)?.title}</option>)}
+          </select>
+        </label>
       </> : <p>Chart jargon? Tap me for a little starlight.</p>}
     </div>
     <button type="button" className="chart-companion-toggle" aria-pressed={active} aria-label={active ? 'Turn off chart companion' : 'Turn on chart companion'} onClick={() => setActive(value => !value)}><Star /><span>{active ? 'Stop guide' : 'Ask Pip'}</span></button>

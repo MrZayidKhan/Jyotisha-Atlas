@@ -59,18 +59,18 @@ function KnownTimeReading({chart}:{chart:Chart}){
    {reading&&<div aria-live="polite">{reading.split(/\n\s*\n/).map((paragraph,index)=><p key={index}>{paragraph}</p>)}</div>}
   </section>}
   <div className="result-actions school-switch" aria-label="Jyotisha approach">
-   <button className="outline-button" aria-pressed={school==='parashari'} onClick={()=>setSchool('parashari')}>Parashari</button>
-   <button className="outline-button" aria-pressed={school==='jaimini'} onClick={()=>setSchool('jaimini')}>Jaimini</button>
+   <button className="outline-button" data-chart-help="parashari" aria-pressed={school==='parashari'} onClick={()=>setSchool('parashari')}>Parashari</button>
+   <button className="outline-button" data-chart-help="jaimini" aria-pressed={school==='jaimini'} onClick={()=>setSchool('jaimini')}>Jaimini</button>
   </div>
   {school==='parashari'?<>
-   <div className="reading-grid">{reflection.map(r=><article key={r.title}>
+   <div className="reading-grid">{reflection.map((r,index)=><article key={r.title} data-chart-help={`theme:${index}`}>
     <h3>{r.title}</h3><p>{r.synthesis}</p>
-    <details><summary>Chart evidence and reflection</summary><p>{r.evidence}</p><p>{r.practice}</p></details>
+    <details><summary data-chart-help={`theme:${index}`}>Chart evidence and reflection</summary><p>{r.evidence}</p><p>{r.practice}</p></details>
    </article>)}</div>
    <details className="reading-feature">
-    <summary>Yoga candidates {yogas.length>0&&`(${yogas.length})`}</summary>
+    <summary data-chart-help="yogas">Yoga candidates {yogas.length>0&&`(${yogas.length})`}</summary>
     <p className="form-help">Checks Gaja Kesari, Budha Aditya, Chandra Mangala and the five Pancha Mahapurusha patterns. These are structural matches. Strength, aspects and cancellation rules require further judgment.</p>
-    {yogas.length?<ul>{yogas.map(y=><li key={y.name}><strong>{y.name}</strong><p>{y.evidence} {y.theme}</p></li>)}</ul>:<p>No matches among these checks.</p>}
+    {yogas.length?<ul>{yogas.map((y,index)=><li key={y.name} data-chart-help={`yoga:${index}`}><strong>{y.name}</strong><p>{y.evidence} {y.theme}</p></li>)}</ul>:<p>No matches among these checks.</p>}
    </details>
   </>:<div className="reading-feature">
    <h3>Jaimini Chara Karakas</h3>
@@ -85,7 +85,7 @@ function KnownTimeReading({chart}:{chart:Chart}){
    <p>{major&&minor?`Current period: ${titleCase(major.lord)} Mahadasha · ${titleCase(minor.lord)} Antardasha.`:'Choose a major period to see its subperiods.'}</p>
    <label className="period-picker">Mahadasha <select value={active} onChange={e=>setActive(Number(e.target.value))}>{periods.map((p,i)=><option value={i} key={p.start}>{titleCase(p.lord)} · {dateLabel(p.start)} to {dateLabel(p.end)}{p.start===major?.start?' · current':''}</option>)}</select></label>
    <div className="placements-table"><table><caption>Antardashas · UTC dates</caption><thead><tr><th>Lord</th><th>From</th><th>Until</th></tr></thead><tbody>
-    {periods[active]?.sub.map(p=><tr key={p.start} data-current={p.start===minor?.start}><td>{titleCase(p.lord)}{p.start===minor?.start?' · current':''}</td><td>{dateLabel(p.start)}</td><td>{dateLabel(p.end)}</td></tr>)}
+    {periods[active]?.sub.map((p,index)=><tr key={p.start} data-chart-help={`period:${active}:${index}`} data-current={p.start===minor?.start}><td>{titleCase(p.lord)}{p.start===minor?.start?' · current':''}</td><td>{dateLabel(p.start)}</td><td>{dateLabel(p.end)}</td></tr>)}
    </tbody></table></div>
    <p className="form-help">The Moon’s progress through its birth Nakshatra sets the starting balance. Dates use a 365.25-day year. Other conventions can give different dates.</p>
    <a className="source" href={parashara} target="_blank" rel="noreferrer">Brihat Parashara Hora Shastra</a>

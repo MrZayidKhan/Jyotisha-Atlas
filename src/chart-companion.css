@@ -4,13 +4,14 @@
 .chart-companion-bubble strong+p{margin-top:5px}
 .chart-companion-toggle,.chart-companion-topics button{background:#211c37;color:#f5ecff;border:1px solid #73669a;border-radius:10px;padding:6px 8px;font:inherit}
 .chart-companion-toggle{display:grid;justify-items:center;flex:none;font-size:11px}
-.chart-companion-topics{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
-.chart-companion-topics button{font-size:12px}
-.chart-companion-topics button[aria-pressed=true]{border-color:#ffe2a0;color:#ffe2a0}
+.chart-companion-picker{display:grid;gap:4px;margin-top:10px;font-size:12px}
+.chart-companion-picker select{width:100%;padding:5px;color:#f5ecff;background:#211c37;border:1px solid #73669a;border-radius:6px}
 .chart-companion-star{position:relative;display:block;width:32px;height:32px;background:#ffe2a0;clip-path:polygon(44% 0,56% 0,56% 19%,69% 19%,69% 37%,100% 37%,100% 50%,87% 50%,87% 62%,75% 62%,75% 100%,62% 100%,62% 87%,38% 87%,38% 100%,25% 100%,25% 62%,13% 62%,13% 50%,0 50%,0 37%,31% 37%,31% 19%,44% 19%)}
 .chart-companion-star span{position:absolute;left:10px;top:14px;width:3px;height:4px;background:#28203d;box-shadow:9px 0 #28203d,4px 6px #c97680}
 .chart-companion-follower{position:fixed;top:0;left:0;transform:translate(-100px,-100px);pointer-events:none;filter:drop-shadow(0 0 7px #ffe2a0)}
 .chart-help-active [data-chart-help]{outline:1px dashed #b4a3e7;outline-offset:4px;cursor:help}
 .chart-help-active [data-chart-help]:hover{outline-color:#ffe2a0;box-shadow:0 0 14px #c4a9ff38}
+.chart-help-active .graha-point circle{stroke:#cbb8ff;stroke-width:2}
+.chart-help-active .graha-point:hover circle,.chart-help-active .graha-point:focus-visible circle{stroke:#ffe2a0;stroke-width:3}
 @media (pointer:coarse),(prefers-reduced-motion:reduce){.chart-companion-follower{display:none}}
 @media print{.chart-companion{display:none}.chart-help-active [data-chart-help]{outline:none;box-shadow:none}}

@@ -2,7 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { calculate } from '../src/engine.ts';
 import { birthHorizon } from '../src/horizon.ts';
+import { chartHelp } from '../src/chartHelp.ts';
 import { currentPeriods, jaiminiIndicators, personalReading, vimshottari, yogaCandidates } from '../src/jyotisha.ts';
+
+test('Pip resolves the selected planet, exact yoga, and chart frame', () => {
+ const chart = calculate({ date:'2000-01-01', time:'12:00', lat:51.48, lon:0, offset:0, unknown:false, name:'', place:'Greenwich' });
+ assert.ok(chartHelp(chart, 'sidereal').text.includes(chart.ayanamsa.toFixed(2)));
+ assert.equal(chartHelp(chart, 'planet:rahu').title, 'Rahu');
+ assert.ok(chartHelp(chart, 'theme:0').text.includes('ruling planet'));
+ const yoga = yogaCandidates(chart)[0];
+ assert.equal(chartHelp(chart, 'yoga:0').title, yoga.name);
+ assert.ok(chartHelp(chart, 'yoga:0').text.includes(yoga.evidence));
+ assert.equal(chartHelp(chart, 'planet:unknown'), undefined);
+});
 
 const birth={name:'Fixture',date:'2000-01-01',time:'12:00',place:'Greenwich',lat:51.48,lon:0,offset:0,unknown:false};
 const chart=calculate(birth);
