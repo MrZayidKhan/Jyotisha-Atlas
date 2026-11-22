@@ -34,9 +34,8 @@ All imagery is bundled locally. The composition is an artistic educational visua
 | mars.jpg | PIA00407 | https://images.nasa.gov/details/PIA00407 |
 | jupiter.jpg | PIA02873 | https://images.nasa.gov/details/PIA02873 |
 | saturn.jpg | PIA12567 | https://images.nasa.gov/details/PIA12567 |
-| galaxy.jpg | PIA12348 | https://images.nasa.gov/details/PIA12348 |
 
-Credit NASA and the mission teams specified in each linked record (including JPL, USGS, Cassini and the contributing observatories). PIA12348 is a multiwavelength Galactic-center composite; it is used as atmospheric background, not a birth-sky star map.
+Credit NASA and the mission teams specified in each linked record (including JPL, USGS, Cassini and the contributing observatories).
 
 NASA's educational media-use guidelines: https://www.nasa.gov/nasa-brand-center/images-and-media/ . No NASA logo is used, and no endorsement is implied.
 
