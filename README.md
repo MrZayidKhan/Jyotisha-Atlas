@@ -65,6 +65,10 @@ Open http://127.0.0.1:5173 . Choose **Explore a sample sky** for a labeled Green
 
 ## Optional backend and AI
 
+**AI features require a running backend and an AI provider API key.** This project’s backend supports the Gemini API. To use a different AI provider, adapt the backend to that provider’s API and configure its key server-side.
+
+GitHub Pages runs the built-in guide and chart explanations in the browser. For AI on your own computer, start the separate local backend and open the Vite frontend with `npm run dev`.
+
 The backend is maintained separately from this GitHub checkout. On the maintainer's Windows machine, double-click `D:\IKS\server-run.cmd` to start FastAPI. Press Ctrl+C in its terminal to stop it.
 
 In a second PowerShell terminal:
@@ -77,9 +81,9 @@ python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 
 Expect `Uvicorn running on http://127.0.0.1:8000`. Vite proxies `/api/*` to FastAPI. Inspect endpoints at http://127.0.0.1:8000/docs . The frontend chart and local source guide work without this service.
 
-For Gemini retrieval, create `.env` beside package.json using `.env.example`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY`. The optional `GEMINI_MODEL` defaults to `gemini-3.5-flash-lite`. Keep the key server-side. Restart FastAPI and reload the frontend. Chat offers the AI toggle when `/api/health` reports `llm_configured: true`.
+Create `.env` beside package.json using `.env.example`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY`. The optional `GEMINI_MODEL` defaults to `gemini-3.5-flash-lite`. Keep the key in the local backend environment and restart FastAPI after changing it.
 
-The optional local FastAPI backend uses Gemini to select a predefined answer card. For the conversational analysis described below, use the hosted site.
+The local FastAPI backend can generate a personalized report and expand Pip’s explanations of specific chart details. Local chat uses Gemini to select a predefined answer card. The separate hosted site supports conversational analysis.
 
 Sites hosting uses a Worker with `/api/health` and `/api/chat`. Set `GEMINI_API_KEY` in Sites runtime secrets to enable connected AI. Set `GEMINI_MODEL` only to override the default. In connected mode, the Worker recalculates the chart and sends derived chart evidence, the latest question, and recent messages to Gemini. Gemini writes a plain-English response. If the key is absent or Gemini fails, the Worker returns the built-in guide response.
 
