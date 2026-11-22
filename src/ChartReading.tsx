@@ -42,20 +42,20 @@ function KnownTimeReading({chart}:{chart:Chart}){
   <p className="eyebrow">Traditional interpretation</p>
   <h2>Chart interpretation</h2>
   <p className="section-copy">Explore what your placements traditionally suggest about personality, relationships, work, and growth. Treat these as themes for reflection.</p>
-  <section className="reading-feature" aria-label="How to read your chart">
+  <section className="reading-feature" data-chart-help="reading" aria-label="How to read your chart">
    <h3>What each part means</h3>
    <p><strong>Rising sign</strong> describes your approach to life. <strong>The Moon and its nakshatra</strong> describe emotional habits through the Moon’s sign and lunar mansion.</p>
    <p><strong>Planets</strong> represent drives such as initiative or care. Their <strong>signs</strong> describe how those drives are expressed, and their <strong>houses</strong> show the areas of life they’re associated with.</p>
    <p><strong>Yogas</strong> are patterns formed by multiple placements. <strong>Dashas</strong> are traditional timing periods used to explore which themes may come into focus.</p>
   </section>
-  {import.meta.env.DEV&&<section className="reading-feature" aria-label="Gemini personal reading">
-   <h3>Personal reading with Gemini</h3>
-   <p>Generate a plain-English overview of your personality, life themes, and current period. This sends calculated chart evidence to Gemini.</p>
+  {import.meta.env.DEV&&<section className="reading-feature" aria-label="AI personal reading">
+   <h3>Personal reading with AI</h3>
+   <p>Generate a plain-English overview of your personality, life themes, and current period. This shares calculated chart evidence with the AI service.</p>
    {!reading&&<button className="outline-button" disabled={readingStatus==='loading'} onClick={generateReading}>
     {readingStatus==='error'?'Try again':'Generate my reading'}
    </button>}
    {readingStatus==='loading'&&<p role="status">Tracing the patterns in your sky…</p>}
-   {readingStatus==='error'&&<p role="status">The signal from Gemini faded. Check that the local API is running, or explore the chart reading below.</p>}
+   {readingStatus==='error'&&<p role="status">The AI signal faded. Check that the local API is running, or explore the chart reading below.</p>}
    {reading&&<div aria-live="polite">{reading.split(/\n\s*\n/).map((paragraph,index)=><p key={index}>{paragraph}</p>)}</div>}
   </section>}
   <div className="result-actions school-switch" aria-label="Jyotisha approach">
@@ -80,7 +80,7 @@ function KnownTimeReading({chart}:{chart:Chart}){
    {aspects&&<p><strong>Rashi Drishti from Lagna.</strong> Your rising sign {aspects.rising} connects with {aspects.signs.join(', ')} under Jaimini sign aspects. {aspects.planets.length?`Classical grahas in those signs: ${aspects.planets.join(', ')}.`:'Those signs have no classical grahas in this chart.'}</p>}
    <a className="source" href={jaimini} target="_blank" rel="noreferrer">Jaimini Sutras</a>
   </div>}
-  <div id="dasha-timeline" className="reading-feature">
+  <div id="dasha-timeline" className="reading-feature" data-chart-help="timing">
    <h3>Vimshottari timeline</h3>
    <p>{major&&minor?`Current period: ${titleCase(major.lord)} Mahadasha · ${titleCase(minor.lord)} Antardasha.`:'Choose a major period to see its subperiods.'}</p>
    <label className="period-picker">Mahadasha <select value={active} onChange={e=>setActive(Number(e.target.value))}>{periods.map((p,i)=><option value={i} key={p.start}>{titleCase(p.lord)} · {dateLabel(p.start)} to {dateLabel(p.end)}{p.start===major?.start?' · current':''}</option>)}</select></label>

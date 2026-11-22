@@ -86,7 +86,7 @@ The first lord comes from the Moon’s birth Nakshatra in that repeating order, 
 
 Built-in answers work without an AI account. Try “What is my current dasha?”, “Which yogas match?”, “Where is Chandra?”, or “Explain Jaimini”. If the site owner configures connected AI, an opt-in toggle appears. The Worker recalculates the chart from date, time, coordinates and offset, with name and place label stripped in the browser. The provider sees the question, recent user messages and selected chart fact cards. It picks a card; planet positions stay determined by the chart engine. When the provider fails, the built-in answer remains available. Avoid including identifying details in questions sent to connected AI.
 
-Atlas uses city-name lookups at Open-Meteo/GeoNames. It stores no app accounts, charts, or chat histories. The current hosted Site is private. Set `GEMINI_API_KEY` as a server-side runtime secret to enable Gemini for chart chat. Connected chat sends derived chart cards and questions to Google. Review Google's [Gemini pricing and data-use terms](https://ai.google.dev/gemini-api/docs/pricing) before enabling connected chat for real user data.
+Atlas uses city-name lookups at Open-Meteo/GeoNames. It stores no app accounts, charts, or chat histories. The public GitHub Pages edition uses built-in explanations. Its chart companion, Pip, highlights sections of the report you can click to learn how to read them. In the local edition, Pip can use the AI service to tailor an explanation to your calculated chart.
 
 ## How the code fits together
 
