@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { localAiUrl } from './localAi';
 import type { Chart } from './engine';
 import { currentPeriods, jaimini, jaiminiAspects, jaiminiIndicators, parashara, periodPractice, personalReading, vimshottari, yogaCandidates } from './jyotisha';
 import './results-views.css';
@@ -23,7 +24,7 @@ function KnownTimeReading({chart}:{chart:Chart}){
   if(readingStatus==='loading')return;
   setReadingStatus('loading');
   try{
-   const response=await fetch('/api/reading',{
+   const response=await fetch(localAiUrl('/api/reading'),{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({...chart.birth,name:'',place:'Birth location'}),
@@ -48,16 +49,17 @@ function KnownTimeReading({chart}:{chart:Chart}){
    <p><strong>Planets</strong> represent drives such as initiative or care. Their <strong>signs</strong> describe how those drives are expressed, and their <strong>houses</strong> show the areas of life they’re associated with.</p>
    <p><strong>Yogas</strong> are patterns formed by multiple placements. <strong>Dashas</strong> are traditional timing periods used to explore which themes may come into focus.</p>
   </section>
-  {import.meta.env.DEV&&<section className="reading-feature" aria-label="AI personal reading">
+  <section className="reading-feature" aria-label="AI personal reading">
    <h3>Personal reading with AI</h3>
    <p>Generate a plain-English overview of your personality, life themes, and current period. This shares calculated chart evidence with the AI service.</p>
+   {!import.meta.env.DEV&&<p className="form-help">Start the local Atlas server on this computer. If your browser asks for local network access, allow it to connect.</p>}
    {!reading&&<button className="outline-button" disabled={readingStatus==='loading'} onClick={generateReading}>
     {readingStatus==='error'?'Try again':'Generate my reading'}
    </button>}
    {readingStatus==='loading'&&<p role="status">Tracing the patterns in your sky…</p>}
    {readingStatus==='error'&&<p role="status">The AI signal faded. Check that the local API is running, or explore the chart reading below.</p>}
    {reading&&<div aria-live="polite">{reading.split(/\n\s*\n/).map((paragraph,index)=><p key={index}>{paragraph}</p>)}</div>}
-  </section>}
+  </section>
   <div className="result-actions school-switch" aria-label="Jyotisha approach">
    <button className="outline-button" data-chart-help="parashari" aria-pressed={school==='parashari'} onClick={()=>setSchool('parashari')}>Parashari</button>
    <button className="outline-button" data-chart-help="jaimini" aria-pressed={school==='jaimini'} onClick={()=>setSchool('jaimini')}>Jaimini</button>

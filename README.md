@@ -67,7 +67,7 @@ Open http://127.0.0.1:5173 . Choose **Explore a sample sky** for a labeled Green
 
 **AI features require a running backend and an AI provider API key.** This project’s backend supports the Gemini API. To use a different AI provider, adapt the backend to that provider’s API and configure its key server-side.
 
-GitHub Pages runs the built-in guide and chart explanations in the browser. For AI on your own computer, start the separate local backend and open the Vite frontend with `npm run dev`.
+GitHub Pages runs the built-in guide and chart explanations in the browser. For AI report readings and Pip explanations on the [public site](https://mrzayidkhan.github.io/Jyotisha-Atlas/), start the separate FastAPI backend on the same computer, then reload the site. Allow local network access if prompted. The browser connects to `127.0.0.1:8000`. The backend and key stay on your PC. You can also use the local Vite frontend with `npm run dev`.
 
 The backend is maintained separately from this GitHub checkout. On the maintainer's Windows machine, double-click `D:\IKS\server-run.cmd` to start FastAPI. Press Ctrl+C in its terminal to stop it.
 

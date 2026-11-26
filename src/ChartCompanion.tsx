@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { localAiUrl } from './localAi';
 import type { Chart } from './engine';
 import { chartHelp, guideTopics } from './chartHelp';
 import { personalReading, yogaCandidates } from './jyotisha';
@@ -46,10 +47,9 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     setTopic(key);
     setAnswer(detail.text);
     setBusy(false);
-    if (!import.meta.env.DEV) return;
     setBusy(true);
     try {
-      const response = await fetch('/api/explain', {
+      const response = await fetch(localAiUrl('/api/explain'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]),
@@ -94,7 +94,7 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
         <strong>{topic ? chartHelp(chart, topic)?.title : 'Pick a glowing detail'}</strong>
         <p aria-live="polite">{answer || 'Try Sidereal, a dot on the wheel, or a specific reading card. I’ll explain what you’re seeing and how Atlas got there.'}</p>
         {busy && <small role="status">Reading your chart…</small>}
-        {import.meta.env.DEV && !topic && <small>AI explanations use calculated chart details.</small>}
+        {!topic && <small>With the local server running, AI can expand this explanation using calculated chart details.</small>}
         <label className="chart-companion-picker">Explain another detail
           <select value={availableTopics.includes(topic) ? topic : ''} onChange={event => void explain(event.target.value)}>
             <option value="" disabled>Choose a chart detail</option>
