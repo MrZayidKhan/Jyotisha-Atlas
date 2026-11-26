@@ -11,6 +11,8 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
   const [answer, setAnswer] = useState('');
   const [busy, setBusy] = useState(false);
   const [personal, setPersonal] = useState(false);
+  const [passage, setPassage] = useState('');
+  const [aiUnavailable, setAiUnavailable] = useState(false);
   const star = useRef<HTMLSpanElement>(null);
   const widget = useRef<HTMLElement>(null);
   const request = useRef<AbortController | null>(null);
@@ -39,14 +41,16 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     };
   }, [active]);
 
-  function selectTopic(key: string) {
+  function selectTopic(key: string, excerpt = '') {
     const detail = generalChartHelp(chart, key);
     if (!detail) return;
     request.current?.abort();
     setTopic(key);
-    setAnswer(detail.text);
+    setPassage(excerpt);
+    setAnswer(excerpt ? 'This passage draws on chart placements to describe a traditional theme. Choose In my chart to ask which placements support it and what it means in everyday words.' : detail.text);
     setPersonal(false);
     setBusy(false);
+    setAiUnavailable(false);
   }
 
   async function explainInChart() {
@@ -55,21 +59,23 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
-    setAnswer(detail.text);
+    setAnswer(passage || detail.text);
     setPersonal(true);
     setBusy(true);
+    setAiUnavailable(false);
     try {
       const response = await fetch(localAiUrl('/api/explain'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]),
-        body: JSON.stringify({ section: topic, birth: { ...chart.birth, name: '', place: 'Birth location' } }),
+        body: JSON.stringify({ section: topic, passage: passage || undefined, birth: { ...chart.birth, name: '', place: 'Birth location' } }),
       });
-      if (!response.ok) return;
+      if (!response.ok) throw Error('AI unavailable');
       const result = await response.json();
-      if (!controller.signal.aborted && typeof result.answer === 'string' && result.answer.trim()) setAnswer(result.answer);
+      if (typeof result.answer !== 'string' || !result.answer.trim()) throw Error('Empty explanation');
+      if (!controller.signal.aborted) setAnswer(result.answer);
     } catch {
-      // The built-in explanation is already visible.
+      if (!controller.signal.aborted && passage) setAiUnavailable(true);
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }
@@ -90,7 +96,7 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
         event.preventDefault();
         event.stopPropagation();
       }
-      selectTopic(key);
+      selectTopic(key, target?.hasAttribute('data-reading-passage') ? target.textContent?.trim().slice(0, 3200) : '');
     }
     root.classList.add('chart-help-active');
     root.addEventListener('click', select, true);
@@ -106,11 +112,12 @@ export default function ChartCompanion({ chart }: { chart: Chart }) {
     {active && <span ref={star} className="chart-companion-follower" aria-hidden="true"><Star /></span>}
     <div className="chart-companion-bubble">
       {active ? <>
-        <strong>{topic ? generalChartHelp(chart, topic)?.title : 'Pick a glowing detail'}</strong>
+        <strong>{passage ? 'Reading passage' : topic ? generalChartHelp(chart, topic)?.title : 'Pick a glowing detail'}</strong>
         <p aria-live="polite">{answer || 'Pick any glowing chart detail to see what it means.'}</p>
         {busy && <small role="status">Reading your chart…</small>}
+        {aiUnavailable && <small role="status">Pip couldn’t reach AI. Check the local server and try again.</small>}
         {topic && chartHelp(chart, topic) && <div className="chart-companion-actions">
-          <button type="button" onClick={personal ? () => selectTopic(topic) : explainInChart}>{personal ? 'General meaning' : 'In my chart'}</button>
+          <button type="button" onClick={personal && !aiUnavailable ? () => selectTopic(topic, passage) : explainInChart}>{aiUnavailable ? 'Try AI again' : personal ? 'General meaning' : 'In my chart'}</button>
         </div>}
         <label className="chart-companion-picker">Explain another detail
           <select value={availableTopics.includes(topic) ? topic : ''} onChange={event => selectTopic(event.target.value)}>

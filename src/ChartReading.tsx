@@ -58,7 +58,11 @@ function KnownTimeReading({chart}:{chart:Chart}){
    </button>}
    {readingStatus==='loading'&&<p role="status">Tracing the patterns in your sky…</p>}
    {readingStatus==='error'&&<p role="status">The AI signal faded. Check that the local API is running, or explore the chart reading below.</p>}
-   {reading&&<div aria-live="polite">{reading.split(/\n\s*\n/).map((paragraph,index)=><p key={index}>{paragraph}</p>)}</div>}
+   {reading&&<div aria-live="polite">
+    <p className="form-help">Turn on Ask Pip to explain a passage in this reading.</p>
+    {reading.split(/\n\s*\n/).filter(part=>part.trim()).map((paragraph,index)=>
+     <p key={index} data-chart-help="reading" data-reading-passage>{paragraph}</p>)}
+   </div>}
   </section>
   <div className="result-actions school-switch" aria-label="Jyotisha approach">
    <button className="outline-button" data-chart-help="parashari" aria-pressed={school==='parashari'} onClick={()=>setSchool('parashari')}>Parashari</button>
