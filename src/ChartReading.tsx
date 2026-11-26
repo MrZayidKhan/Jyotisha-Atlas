@@ -49,7 +49,7 @@ function KnownTimeReading({chart}:{chart:Chart}){
    <p><strong>Planets</strong> represent drives such as initiative or care. Their <strong>signs</strong> describe how those drives are expressed, and their <strong>houses</strong> show the areas of life they’re associated with.</p>
    <p><strong>Yogas</strong> are patterns formed by multiple placements. <strong>Dashas</strong> are traditional timing periods used to explore which themes may come into focus.</p>
   </section>
-  <section className="reading-feature" aria-label="AI personal reading">
+  <section className="reading-feature" data-chart-help="ai" aria-label="AI personal reading">
    <h3>Personal reading with AI</h3>
    <p>Generate a plain-English overview of your personality, life themes, and current period. This shares calculated chart evidence with the AI service.</p>
    {!import.meta.env.DEV&&<p className="form-help">Start the local Atlas server on this computer. If your browser asks for local network access, allow it to connect.</p>}
@@ -77,8 +77,8 @@ function KnownTimeReading({chart}:{chart:Chart}){
   </>:<div className="reading-feature">
    <h3>Jaimini Chara Karakas</h3>
    <p>In this seven-graha convention, the planet furthest through its sign becomes Atmakaraka, traditionally the principal significator of the self. Its Navamsa sign is shown as an additional interpretive reference.</p>
-   <div className="placements-table"><table><caption>Ranked by degrees traveled within sign</caption><thead><tr><th>Role</th><th>Graha</th><th>Degree</th><th>Navamsa</th></tr></thead>
-    <tbody>{karakas.map(k=><tr key={k.role}><td>{k.role}</td><td>{k.planet}</td><td>{k.degree.toFixed(3)}°</td><td>{k.navamsa}</td></tr>)}</tbody></table></div>
+   <div className="placements-table" data-chart-help="jaimini"><table><caption>Ranked by degrees traveled within sign</caption><thead><tr><th>Role</th><th>Graha</th><th>Degree</th><th>Navamsa</th></tr></thead>
+    <tbody>{karakas.map((k,index)=><tr key={k.role} data-chart-help={`karaka:${index}`}><td>{k.role}</td><td>{k.planet}</td><td>{k.degree.toFixed(3)}°</td><td>{k.navamsa}</td></tr>)}</tbody></table></div>
    {aspects&&<p><strong>Rashi Drishti from Lagna.</strong> Your rising sign {aspects.rising} connects with {aspects.signs.join(', ')} under Jaimini sign aspects. {aspects.planets.length?`Classical grahas in those signs: ${aspects.planets.join(', ')}.`:'Those signs have no classical grahas in this chart.'}</p>}
    <a className="source" href={jaimini} target="_blank" rel="noreferrer">Jaimini Sutras</a>
   </div>}
@@ -92,7 +92,7 @@ function KnownTimeReading({chart}:{chart:Chart}){
    <p className="form-help">The Moon’s progress through its birth Nakshatra sets the starting balance. Dates use a 365.25-day year. Other conventions can give different dates.</p>
    <a className="source" href={parashara} target="_blank" rel="noreferrer">Brihat Parashara Hora Shastra</a>
   </div>
-  <details className="reading-feature"><summary>Remedies and traditional practices</summary>
+  <details className="reading-feature" data-chart-help="practices"><summary data-chart-help="practices">Remedies and traditional practices</summary>
    {practice&&<p><strong>For your current period · {practice.name}</strong> ({practice.placement}). {practice.suggestion}</p>}
    <p>Jyotisha traditions discuss mantra, dana (giving) and seva (service). If you want to engage with them, consider a prayer or quiet recitation from your own tradition, volunteering, or giving within your means. The reflection practices above connect to specific chart themes.</p>
    <p className="form-help">These are optional cultural practices. Chart placements cannot establish that a remedy will change an outcome.</p>

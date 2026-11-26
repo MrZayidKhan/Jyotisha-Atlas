@@ -1,13 +1,86 @@
 import { signs, type Chart } from './engine.ts';
 import { houses, meanings } from './knowledge.ts';
-import { personalReading, vimshottari, yogaCandidates } from './jyotisha.ts';
+import { jaiminiIndicators, periodPractice, personalReading, vimshottari, yogaCandidates } from './jyotisha.ts';
 
 const help = (title: string, ...paragraphs: string[]) => ({ title, text: paragraphs.join('\n\n') });
-export const guideTopics = ['sidereal','houses','nodes','wheel','lagna','nakshatra','pada','placements','parashari','yogas','jaimini','timing'] as const;
+export const guideTopics = ['sidereal','houses','nodes','wheel','lagna','nakshatra','pada','placements','parashari','yogas','jaimini','timing','practices','methods'] as const;
+
+const definitions: Record<string, string> = {
+ sidereal: 'A sidereal chart measures zodiac positions from a reference tied to the stars. Ayanamsa is the angular difference between that reference and the tropical zodiac, which starts at the March equinox.',
+ houses: 'A house is a life topic in the chart. In the whole-sign method, the rising sign is House 1 and each following sign is the next house.',
+ nodes: 'Lunar nodes are the two opposite points where the Moon’s orbit crosses the plane of Earth’s orbit. The mean-node method smooths out short-term changes in their motion.',
+ wheel: 'The wheel is a map of zodiac positions. Each slice is a sign. A dot’s angle shows its longitude, and its distance from the center only helps separate the markers.',
+ lagna: 'Lagna is the zodiac point rising on the eastern horizon at birth. It sets the starting point for counting houses and depends on the time and location.',
+ nakshatra: 'A nakshatra is one of 27 equal sections of the zodiac. The Moon’s birth nakshatra names the section containing the Moon and helps set the first Vimshottari period.',
+ pada: 'Each nakshatra is divided into four padas. A pada narrows down where the Moon sits within that section.',
+ placements: 'The placement table lists the chart positions for each planet or node. A sign is one division of the zodiac. A degree measures how far into that sign the placement is. A house connects the position to a traditional life topic.',
+ reading: 'The interpretation section applies traditional rules to calculated positions. A reading card tells you which chart details the rule uses and what theme it suggests.',
+ parashari: 'Parashari is a Jyotisha tradition. This report finds the planet that rules the sign in a house, then looks at the house where that planet sits to connect the two topics.',
+ yogas: 'A yoga is a named pattern involving particular chart placements. A candidate appears when a defined rule matches. For example, one rule checks whether the Sun and Mercury share a sign.',
+ jaimini: 'Jaimini is a Jyotisha tradition. The report ranks seven planets by how far they have moved within their own signs, then assigns each one a traditional role.',
+ timing: 'A dasha is a traditional timing period. A long period is a Mahadasha, and a shorter period within it is an Antardasha. The dates mark the start and end of each period.',
+ practices: 'These optional practices are prompts for reflection, giving, or service drawn from Jyotisha traditions. The report can suggest a practice connected to the symbolism of a current period.',
+ methods: 'This section documents how the positions were calculated and which traditional conventions the chart uses. It helps you understand where small differences in inputs or methods can change a result.',
+ horizon: 'The horizon view shows the direction and height of marked objects from the birthplace at the reference moment. It uses local viewing directions instead of zodiac longitude.',
+ observatory: 'The observatory is a guided 3D view of the planets and chart factors. Planet sizes, spacing and lighting are illustrative.',
+ report: 'Save report opens the browser’s print dialog. You can print the chart or choose Save as PDF.',
+ ai: 'An AI reading turns calculated chart details into a plain-English discussion of life themes. The chart engine supplies the positions and the AI explains the supplied evidence.',
+ degree: 'Degrees show how far a placement is from the start of its sign. Each sign spans 30°.',
+ motion: 'Direct and retrograde describe apparent motion along the zodiac as viewed from Earth. A day range shows how far the longitude changes when the birth time is unknown.',
+};
+
+export function generalChartHelp(chart: Chart, key: string) {
+ const detail = chartHelp(chart,key);
+ const [kind,id] = key.split(':');
+ const titles: Record<string,string> = {horizon:'Birthplace horizon',observatory:'3D observatory',report:'Save report',ai:'AI personal reading'};
+ if (Object.hasOwn(definitions,key)) return {title: detail?.title ?? titles[key] ?? key, text:definitions[key]};
+ if (!detail) return;
+ let text = '';
+ if (kind==='planet') text = ['rahu','ketu'].includes(id)
+  ? `${detail.title} is a lunar node, a calculated crossing of the Moon’s orbital path. Traditional readings associate it with ${meanings[id]}.`
+  : `${detail.title} is a planet marker in the chart. In traditional Jyotisha its associations include ${meanings[id]}. Its sign, degree, and house describe where to read those associations.`;
+ if (kind==='theme') text = `This reading uses the Parashari house-lord method to explore ${detail.title.toLowerCase()}. It links the house associated with the topic to the house occupied by its ruling planet.`;
+ if (kind==='yoga') text = detail.title==='Budha Aditya' ? 'This candidate is checked by looking for the Sun and Mercury in the same sign. The tradition links the pattern with expression and analysis.'
+  : detail.title==='Gaja Kesari' ? 'This candidate is checked by counting Jupiter’s sign from the Moon. Atlas looks for the first, fourth, seventh, or tenth sign in that count.'
+  : detail.title==='Chandra Mangala' ? 'This candidate is checked by looking for the Moon and Mars in the same sign. The tradition connects it with emotion and initiative.'
+  : 'Atlas checks this yoga when the relevant planet occupies House 1, 4, 7, or 10 and is in its own sign or its exaltation sign.';
+ if (kind==='period') text = 'A subperiod is a shorter traditional cycle within a major period. Its start and end dates indicate the span used to discuss the ruling factor’s themes.';
+ if (kind==='karaka') text = 'A karaka is a traditional indicator assigned to a planet. In this Jaimini table, its role depends on its rank by degrees within a sign.';
+ if (kind==='sign') text = 'A sign is a 30-degree sector of the zodiac. The chart wheel places markers in the sector containing their calculated sidereal longitude.';
+ if (kind==='degree') text = definitions.degree;
+ if (kind==='motion') text = definitions.motion;
+ if (kind==='house') text = definitions.houses;
+ return text ? {title:detail.title,text} : undefined;
+}
 
 export function chartHelp(chart: Chart, key: string) {
  const [kind, id, sub] = key.split(':');
  switch (kind) {
+  case 'degree':
+  case 'house':
+  case 'motion': {
+   const p=chart.placements.find(item=>item.key===id);
+   if(!p)return;
+   if(kind==='degree')return help(`${p.name} · degree`, `${p.name} is ${p.degree.toFixed(3)}° from the start of ${signs[p.sign]}.`);
+   if(kind==='house')return help(`${p.name} · house`, p.house ? `${p.name} is in House ${p.house}, traditionally associated with ${houses[p.house-1].toLowerCase()}. The app assigns this house by counting signs forward from the rising sign.` : 'A known birth time is needed to assign a house for this placement.');
+   return help(`${p.name} · motion`, p.range ? `The calculated longitude spans ${p.range[0].toFixed(2)}° to ${p.range[1].toFixed(2)}° over the reference day.` : `The report marks ${p.name} as ${p.retrograde?'retrograde':'direct'} at the birth moment.`);
+  }
+  case 'methods': return help('Calculation notes', `This chart uses an approximate Lahiri offset of ${chart.ayanamsa.toFixed(2)}°, whole-sign houses, and mean lunar nodes. Small differences near a boundary can change the label shown.`);
+  case 'practices': {
+   const practice=periodPractice(chart);
+   return help('Traditional practices', practice ? `The report suggests a practice related to ${practice.name} (${practice.placement}) in the current period. ${practice.suggestion}` : 'The report has no practice tied to an active period.');
+  }
+  case 'sign': {
+   const sign=signs[Number(id)];
+   if(!sign)return;
+   const planets=chart.placements.filter(p=>p.sign===Number(id)).map(p=>p.name);
+   return help(sign, planets.length ? `The chart places ${planets.join(', ')} in this sign.` : 'No planet or lunar-node markers occupy this sign in your chart.');
+  }
+  case 'karaka': {
+   const item=jaiminiIndicators(chart)[Number(id)];
+   if(item)return help(item.role,`${item.planet} is assigned this role based on its ${item.degree.toFixed(2)}° position within its sign. The report lists ${item.navamsa} as its Navamsa sign.`);
+   return;
+  }
   case 'sidereal': return help('Sidereal and Lahiri', 'Sidereal means this chart measures zodiac positions from a reference tied to the stars. The tropical system starts Aries at the March equinox. Those two starting points drift apart over time.',
    `Atlas subtracts a Lahiri offset of about ${chart.ayanamsa.toFixed(2)}° for this chart. That is the ayanamsa shown above the wheel. It can put a planet in the previous sign by changing the coordinate labels used to describe the same planet position.`);
   case 'houses': return help('Whole-sign houses', 'Each house is one entire zodiac sign. The sign rising on the eastern horizon becomes House 1, the next sign becomes House 2, and so on. That gives each placement two labels: its sign and the house that sign occupies in your chart.',

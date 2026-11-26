@@ -2,16 +2,23 @@
 .chart-companion-bubble{width:max-content;max-width:min(310px,calc(100vw - 100px));max-height:45vh;overflow:auto;color:#f5ecff;background:#17152b;border:1px solid #73669a;border-radius:14px 14px 4px 14px;padding:10px 12px;box-shadow:0 5px 24px #0006;font-size:14px;line-height:1.45}
 .chart-companion-bubble p{margin:0;white-space:pre-line}
 .chart-companion-bubble strong+p{margin-top:5px}
-.chart-companion-toggle,.chart-companion-topics button{background:#211c37;color:#f5ecff;border:1px solid #73669a;border-radius:10px;padding:6px 8px;font:inherit}
+.chart-companion-toggle,.chart-companion-actions button{background:#211c37;color:#f5ecff;border:1px solid #73669a;border-radius:10px;padding:6px 8px;font:inherit}
+.chart-companion-actions{margin-top:8px}
+.chart-companion-actions button{color:#ffe2a0;font-size:13px}
 .chart-companion-toggle{display:grid;justify-items:center;flex:none;font-size:11px}
 .chart-companion-picker{display:grid;gap:4px;margin-top:10px;font-size:12px}
 .chart-companion-picker select{width:100%;padding:5px;color:#f5ecff;background:#211c37;border:1px solid #73669a;border-radius:6px}
 .chart-companion-star{position:relative;display:block;width:32px;height:32px;background:#ffe2a0;clip-path:polygon(44% 0,56% 0,56% 19%,69% 19%,69% 37%,100% 37%,100% 50%,87% 50%,87% 62%,75% 62%,75% 100%,62% 100%,62% 87%,38% 87%,38% 100%,25% 100%,25% 62%,13% 62%,13% 50%,0 50%,0 37%,31% 37%,31% 19%,44% 19%)}
 .chart-companion-star span{position:absolute;left:10px;top:14px;width:3px;height:4px;background:#28203d;box-shadow:9px 0 #28203d,4px 6px #c97680}
 .chart-companion-follower{position:fixed;top:0;left:0;transform:translate(-100px,-100px);pointer-events:none;filter:drop-shadow(0 0 7px #ffe2a0)}
-.chart-help-active [data-chart-help]{outline:1px dashed #b4a3e7;outline-offset:4px;cursor:help}
-.chart-help-active [data-chart-help]:hover{outline-color:#ffe2a0;box-shadow:0 0 14px #c4a9ff38}
-.chart-help-active .graha-point circle{stroke:#cbb8ff;stroke-width:2}
-.chart-help-active .graha-point:hover circle,.chart-help-active .graha-point:focus-visible circle{stroke:#ffe2a0;stroke-width:3}
+.chart-help-active [data-chart-help]{cursor:help;box-shadow:0 0 12px #aa8df33d}
+.chart-help-active [data-chart-help]:hover,.chart-help-active [data-chart-help]:focus-visible{box-shadow:0 0 18px #e2b7ff70}
+.chart-help-active :is(article,summary,span,strong)[data-chart-help]:hover::after{content:' ✦';color:#ffe2a0;text-shadow:0 0 8px #e2b7ff;pointer-events:none}
+.chart-help-active svg [data-chart-help]{filter:drop-shadow(0 0 3px #cbb8ff)}
+.chart-help-active svg [data-chart-help]:hover,.chart-help-active svg [data-chart-help]:focus-visible{filter:drop-shadow(0 0 5px #ffe2a0)}
+.chart-companion-follower::before,.chart-companion-follower::after{position:absolute;content:'✦';color:#f9d7ff;font-size:11px;animation:pip-twinkle 1.35s ease-in-out infinite alternate}
+.chart-companion-follower::before{left:-6px;top:4px}
+.chart-companion-follower::after{right:-7px;bottom:0;animation-delay:.4s}
+@keyframes pip-twinkle{from{opacity:.35;transform:scale(.65)}to{opacity:1;transform:scale(1.15)}}
 @media (pointer:coarse),(prefers-reduced-motion:reduce){.chart-companion-follower{display:none}}
-@media print{.chart-companion{display:none}.chart-help-active [data-chart-help]{outline:none;box-shadow:none}}
+@media print{.chart-companion{display:none}.chart-help-active [data-chart-help]{box-shadow:none;filter:none}}
